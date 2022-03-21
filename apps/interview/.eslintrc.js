@@ -11,11 +11,12 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: "module",
     ecmaFeatures: { jsx: true },
-    requireConfigFile: false
+    requireConfigFile: false,
   },
   rules: {
     indent: ["error", 2],
     "linebreak-style": ["error", "unix"],
+    "no-unused-vars": 1,
     semi: ["error", "always"],
   },
   overrides: [
@@ -24,8 +25,7 @@ module.exports = {
       env: { browser: true, es6: true, node: true },
       extends: [
         "eslint:recommended",
-        "plugin:react/recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
+        // "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
       ],
       parser: "@typescript-eslint/parser",
@@ -33,9 +33,9 @@ module.exports = {
         ecmaFeatures: { jsx: true },
         ecmaVersion: 2018,
         sourceType: "module",
-        project: "./tsconfig.json",
+        project: ["./tsconfig.json"],
       },
-      plugins: ["react", "@typescript-eslint"],
+      plugins: ["@typescript-eslint"],
       rules: {
         indent: ["error", 2, { SwitchCase: 1 }],
         "linebreak-style": ["error", "unix"],
