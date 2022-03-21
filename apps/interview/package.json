@@ -1,0 +1,30 @@
+{
+  "name": "codelab",
+  "version": "1.0.0",
+  "description": "js interview questions ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint --ext ./**/*.js --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daolanfler/codelab.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/daolanfler/codelab/issues"
+  },
+  "homepage": "https://github.com/daolanfler/codelab#readme",
+  "devDependencies": {
+    "tsconfig": "workspace:*",
+    "@babel/core": "^7.17.8",
+    "@babel/eslint-parser": "^7.17.0",
+    "@tsconfig/node16": "^1.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.3.0",
+    "@typescript-eslint/parser": "^5.3.0",
+    "eslint": "^8.11.0",
+    "typescript": "^4.4.4"
+  }
+}

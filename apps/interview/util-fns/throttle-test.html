@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+
+<body>
+    <div style="margin-bottom: 20px;">
+        <label> leading: true trailing: true </label>
+        <button id="button">Click Me</button>
+    </div>
+    <div style="margin-bottom: 20px;">
+        <label> leading: true trailing: false </label>
+        <button id="button2">Click Me</button>
+    </div>
+    <div style="margin-bottom: 20px;">
+        <label> leading: false trailing: true </label>
+        <button id="button3">Click Me</button>
+    </div>
+    <div style="margin-bottom: 20px;">
+        <label> leading: false trailing: false </label>
+        <button id="button4">Click Me</button>
+    </div>
+</body>
+<script>
+    function throttle1(
+        func,
+        wait,
+        options = {
+            leading: true,
+            trailing: true
+        }
+    ) {
+        let previous = 0
+        let timer
+        let result
+        return function (...args) {
+            let now = Date.now()
+            if (!previous && options.leading === false) {
+                previous = now
+            }
+            let remaining = wait - (now - previous)
+            if (remaining <= 0 || remaining > wait) {
+                if (timer) {
+                    console.log('case 1: ')
+                    clearTimeout(timer)
+                    timer = null
+                }
+                if (remaining > wait) {
+                    console.log('case 2: now < preview')
+                }
+                previous = now
+                result = func.apply(this, args)
+            } else if (!timer && options.trailing !== false) {
+                timer = setTimeout(() => {
+                    previous = options.leading === false ? 0 : Date.now()
+                    timer = null
+                    result = func.apply(this, args)
+                }, remaining)
+            }
+            console.log('throttled return', result)
+            return result
+        }
+    }
+    window.count = 0
+    window.count2 = 0
+    window.count3 = 0
+    window.count4 = 0
+    document.querySelector('#button').addEventListener('click', throttle1(function () {
+        count++
+        console.log('original return', count)
+        return count
+    }, 1000))
+
+    document.querySelector('#button2').addEventListener('click', throttle1(function () {
+        count2++
+        console.log('original return', count2)
+        return count2
+    }, 1000, { leading: true, trailing: false }))
+
+    document.querySelector('#button3').addEventListener('click', throttle1(function () {
+        count3++
+        console.log('original return', count3)
+        return count3
+    }, 1000, { leading: false, trailing: true }))
+
+    document.querySelector('#button4').addEventListener('click', throttle1(function () {
+        count4++
+        console.log('original return', count4)
+        return count4
+    }, 1000, { leading: false, trailing: false }))
+</script>
+
+</html>
