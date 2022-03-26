@@ -8,8 +8,17 @@ const arr =reactive(['foo', "bar"]);
 
 // arr[0] = "bar";
 
+// effect(() => {
+//   console.log(arr[1]);
+// });
+
+// arr.length = 1;
+
 effect(() => {
-  console.log(arr[1]);
+  for (const key in arr) {
+    // 如果是 empty 则不会被遍历
+    console.log(key);
+  }
 });
 
-arr.length = 1;
+arr.length = 3;

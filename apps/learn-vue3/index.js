@@ -57,7 +57,7 @@ export function createReactive(obj, isShallow = false, isReadonly = false) {
 
     // for ... in
     ownKeys(target) {
-      track(target, ITERATE_KEY);
+      track(target, Array.isArray(target) ? 'length' : ITERATE_KEY);
       return Reflect.ownKeys(target);
     },
 
@@ -140,7 +140,10 @@ function trigger(target, key, type, newVal) {
     });
   }
   
+  // 如果操作的是数组，而且修改了数组的 length 属性
   if (Array.isArray(target) && key === "length") {
+    // 对于索引大于或等于新长度的元素 
+    // 需要把所有相关联的副作用函数取出并添加到 effectsToRun 中待执行
     depsMap.forEach((effects, key) => {
       if (key >= newVal) {
         effects.forEach(effectFn => {
