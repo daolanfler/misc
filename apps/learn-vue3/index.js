@@ -3,7 +3,7 @@ let effectStack = [];
 const bucket = new WeakMap();
 const ITERATE_KEY = Symbol();
 
-export function reactive(obj) {
+export function createReactive(obj, isShallow = false) {
   return new Proxy(obj, {
     get(target, key, receiver) {
       
@@ -11,10 +11,15 @@ export function reactive(obj) {
       if (key === 'raw') {
         return target;
       }
-      track(target, key);
 
+      track(target, key);
       // receiver 表示谁在读取属性
-      return Reflect.get(target, key, receiver);
+      const res = Reflect.get(target, key, receiver);
+      if (isShallow) return res;
+      if (typeof res === "object" && res !== null) {
+        return reactive(res);
+      }
+      return res;
     },
 
     set(target, key, newVal, receiver) {
@@ -56,6 +61,14 @@ export function reactive(obj) {
       return res;
     },
   });
+}
+
+export function reactive(obj){
+  return createReactive(obj, false);
+}
+
+export function shallowReactive(obj){ 
+  return createReactive(obj, true);
 }
 
 function track(target, key) {
