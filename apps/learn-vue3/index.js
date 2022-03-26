@@ -3,55 +3,64 @@ let effectStack = [];
 const bucket = new WeakMap();
 const ITERATE_KEY = Symbol();
 
-export function createReactive(obj, isShallow = false) {
+export function createReactive(obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
     get(target, key, receiver) {
-      
       // 代理对象时，可以通过 raw 访问原始数据
-      if (key === 'raw') {
+      if (key === "raw") {
         return target;
       }
 
-      track(target, key);
+      if (!isReadonly) {
+        track(target, key);
+      }
       // receiver 表示谁在读取属性
       const res = Reflect.get(target, key, receiver);
       if (isShallow) return res;
       if (typeof res === "object" && res !== null) {
-        return reactive(res);
+        return isReadonly ? readonly(res) : reactive(res);
       }
       return res;
     },
 
     set(target, key, newVal, receiver) {
+      if (isReadonly) {
+        console.warn(`属性 ${key} 是只读的`);
+        return true;
+      }
       const oldVal = target[key];
       const type = Object.prototype.hasOwnProperty.call(target, key)
         ? "SET"
         : "ADD";
 
       const res = Reflect.set(target, key, newVal, receiver);
-      // target === receiver.raw 说明receiver 就是代理对象。原型对象上不触发 
+      // target === receiver.raw 说明receiver 就是代理对象。原型对象上不触发
       if (target === receiver.raw) {
-      // 不全等，并且都不是 NAN 的时候才触发响应 
+        // 不全等，并且都不是 NAN 的时候才触发响应
         if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
           trigger(target, key, type);
         }
       }
       return res;
     },
-    
+
     // in
     has(target, key) {
       track(target, key);
       return Reflect.ha(target, key);
     },
-    
+
     // for ... in
     ownKeys(target) {
       track(target, ITERATE_KEY);
       return Reflect.ownKeys(target);
     },
-    
+
     deleteProperty(target, key) {
+      if (isReadonly) {
+        console.warn(`属性 ${key} 是只读的`);
+        return true;
+      }
       const hadKey = Object.prototype.hasOwnProperty.call(target, key);
       const res = Reflect.deleteProperty(target, key);
 
@@ -63,12 +72,20 @@ export function createReactive(obj, isShallow = false) {
   });
 }
 
-export function reactive(obj){
+export function reactive(obj) {
   return createReactive(obj, false);
 }
 
-export function shallowReactive(obj){ 
+export function shallowReactive(obj) {
   return createReactive(obj, true);
+}
+
+export function readonly(obj) {
+  return createReactive(obj, false, true);
+}
+
+export function shallowReadonly(obj) {
+  return createReactive(obj, true /* shallow */, true);
 }
 
 function track(target, key) {
@@ -241,5 +258,3 @@ function traverse(value, seen = new Set()) {
   }
   return value;
 }
-
-
