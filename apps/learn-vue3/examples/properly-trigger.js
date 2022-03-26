@@ -14,4 +14,5 @@ effect(() => {
 
 child.bar = 2;
 
-console.log('paretn.bar', parent.bar);
+console.log(child.raw === obj);
+console.log(parent.raw === proto);

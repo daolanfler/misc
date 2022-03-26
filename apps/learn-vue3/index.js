@@ -6,11 +6,17 @@ const ITERATE_KEY = Symbol();
 export function reactive(obj) {
   return new Proxy(obj, {
     get(target, key, receiver) {
+      
+      // 代理对象时，可以通过 raw 访问原始数据
+      if (key === 'raw') {
+        return target;
+      }
       track(target, key);
 
       // receiver 表示谁在读取属性
       return Reflect.get(target, key, receiver);
     },
+
     set(target, key, newVal, receiver) {
       const oldVal = target[key];
       const type = Object.prototype.hasOwnProperty.call(target, key)
@@ -18,23 +24,28 @@ export function reactive(obj) {
         : "ADD";
 
       const res = Reflect.set(target, key, newVal, receiver);
+      // target === receiver.raw 说明receiver 就是代理对象。原型对象上不触发 
+      if (target === receiver.raw) {
       // 不全等，并且都不是 NAN 的时候才触发响应 
-      if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
-
-        trigger(target, key, type);
+        if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+          trigger(target, key, type);
+        }
       }
       return res;
     },
+    
     // in
     has(target, key) {
       track(target, key);
       return Reflect.ha(target, key);
     },
+    
     // for ... in
     ownKeys(target) {
       track(target, ITERATE_KEY);
       return Reflect.ownKeys(target);
     },
+    
     deleteProperty(target, key) {
       const hadKey = Object.prototype.hasOwnProperty.call(target, key);
       const res = Reflect.deleteProperty(target, key);
