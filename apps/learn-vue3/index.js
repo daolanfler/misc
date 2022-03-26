@@ -29,16 +29,21 @@ export function createReactive(obj, isShallow = false, isReadonly = false) {
         return true;
       }
       const oldVal = target[key];
-      const type = Object.prototype.hasOwnProperty.call(target, key)
-        ? "SET"
-        : "ADD";
+
+      const type = Array.isArray(target)
+        ? Number(key) < target.length
+          ? "SET"
+          : "ADD"
+        : Object.prototype.hasOwnProperty.call(target, key)
+          ? "SET"
+          : "ADD";
 
       const res = Reflect.set(target, key, newVal, receiver);
       // target === receiver.raw 说明receiver 就是代理对象。原型对象上不触发
       if (target === receiver.raw) {
         // 不全等，并且都不是 NAN 的时候才触发响应
         if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
-          trigger(target, key, type);
+          trigger(target, key, type, newVal);
         }
       }
       return res;
@@ -101,7 +106,7 @@ function track(target, key) {
   deps.add(activeEffect);
 }
 
-function trigger(target, key, type) {
+function trigger(target, key, type, newVal) {
   const depsMap = bucket.get(target);
 
   if (!depsMap) return;
@@ -118,6 +123,7 @@ function trigger(target, key, type) {
         }
       });
   }
+
   effects &&
     effects.forEach((effect) => {
       if (effect !== activeEffect) {
@@ -125,6 +131,27 @@ function trigger(target, key, type) {
       }
     });
 
+  if (type === 'ADD' && Array.isArray(target)) {
+    const lengthEffects = depsMap.get('length');
+    lengthEffects && lengthEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+  
+  if (Array.isArray(target) && key === "length") {
+    depsMap.forEach((effects, key) => {
+      if (key >= newVal) {
+        effects.forEach(effectFn => {
+          if (effectFn !== activeEffect) {
+            effectsToRun.add(effectFn);
+          }
+        });
+      }
+    });
+  }
+  
   effectsToRun.forEach((effectFn) => {
     if (effectFn.options.scheduler) {
       effectFn.options.scheduler(effectFn);
