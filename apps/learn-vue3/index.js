@@ -1,17 +1,37 @@
 let activeEffect;
 let effectStack = [];
 const bucket = new WeakMap();
+const ITERATE_KEY = Symbol();
 
-const data = { foo: 1, bar: 2 };
+const data = {
+  foo: 1,
+  get bar() {
+    return this.foo;
+  },
+};
 
 const obj = new Proxy(data, {
-  get(target, key) {
+  get(target, key, receiver) {
     track(target, key);
-    return target[key];
+
+    // receiver 表示谁在读取属性
+    return Reflect.get(target, key, receiver);
   },
-  set(target, key, newVal) {
-    target[key] = newVal;
+  set(target, key, newVal, receiver) {
+    const res = Reflect.set(target, key, receiver);
+
     trigger(target, key);
+    return res;
+  },
+  // in
+  has(target, key) {
+    track(target, key);
+    return Reflect.ha(target, key);
+  },
+  // for ... in
+  ownKeys(target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
   },
 });
 
@@ -34,12 +54,22 @@ function trigger(target, key) {
   if (!depsMap) return;
   const effects = depsMap.get(key);
   const effectsToRun = new Set();
+
+  const iterateEffects = depsMap.get(ITERATE_KEY);
+
   effects &&
     effects.forEach((effect) => {
       if (effect !== activeEffect) {
         effectsToRun.add(effect);
       }
     });
+  iterateEffects &&
+    iterateEffects.forEach((effectFn) => {
+      if (effect !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+
   effectsToRun.forEach((effectFn) => {
     if (effectFn.options.scheduler) {
       effectFn.options.scheduler(effectFn);
@@ -175,14 +205,22 @@ function traverse(value, seen = new Set()) {
 }
 // below is not implementation, just example
 
-watch(
-  () => obj.foo,
-  (value, oldVal) => {
-    console.log("数据变化了", value, oldVal);
-  },
-  {
-    immediate: true,
-  }
-);
+// watch(
+//   () => obj.foo,
+//   (value, oldVal) => {
+//     console.log("数据变化了", value, oldVal);
+//   },
+//   {
+//     immediate: true,
+//   }
+// );
 
-obj.foo++;
+// obj.foo++;
+
+effect(() => {
+  for (const key in obj) {
+    console.log(key);
+  }
+});
+
+obj.bar = 'random';

@@ -1,4 +1,9 @@
 {
   "eslint.packageManager": "pnpm",
-  "eslint.workingDirectories": [ "./apps/interview", "./apps/docs", "./apps/web"]
+  "eslint.workingDirectories": [
+    "./apps/interview",
+    "./apps/docs",
+    "./apps/web",
+    "./apps/learn-vue3"
+  ]
 }
