@@ -3,37 +3,49 @@ let effectStack = [];
 const bucket = new WeakMap();
 const ITERATE_KEY = Symbol();
 
-const data = {
-  foo: 1,
-  get bar() {
-    return this.foo;
-  },
-};
+export function reactive(obj) {
+  return new Proxy(obj, {
+    get(target, key, receiver) {
+      track(target, key);
 
-const obj = new Proxy(data, {
-  get(target, key, receiver) {
-    track(target, key);
+      // receiver 表示谁在读取属性
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, newVal, receiver) {
+      const oldVal = target[key];
+      const type = Object.prototype.hasOwnProperty.call(target, key)
+        ? "SET"
+        : "ADD";
 
-    // receiver 表示谁在读取属性
-    return Reflect.get(target, key, receiver);
-  },
-  set(target, key, newVal, receiver) {
-    const res = Reflect.set(target, key, receiver);
+      const res = Reflect.set(target, key, newVal, receiver);
+      // 不全等，并且都不是 NAN 的时候才触发响应 
+      if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
 
-    trigger(target, key);
-    return res;
-  },
-  // in
-  has(target, key) {
-    track(target, key);
-    return Reflect.ha(target, key);
-  },
-  // for ... in
-  ownKeys(target) {
-    track(target, ITERATE_KEY);
-    return Reflect.ownKeys(target);
-  },
-});
+        trigger(target, key, type);
+      }
+      return res;
+    },
+    // in
+    has(target, key) {
+      track(target, key);
+      return Reflect.ha(target, key);
+    },
+    // for ... in
+    ownKeys(target) {
+      track(target, ITERATE_KEY);
+      return Reflect.ownKeys(target);
+    },
+    deleteProperty(target, key) {
+      const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+      const res = Reflect.deleteProperty(target, key);
+
+      if (res && hadKey) {
+        trigger(target, key, "DELETE");
+      }
+      return res;
+    },
+  });
+}
 
 function track(target, key) {
   if (!activeEffect) return;
@@ -48,25 +60,27 @@ function track(target, key) {
   deps.add(activeEffect);
 }
 
-function trigger(target, key) {
+function trigger(target, key, type) {
   const depsMap = bucket.get(target);
 
   if (!depsMap) return;
   const effects = depsMap.get(key);
   const effectsToRun = new Set();
 
-  const iterateEffects = depsMap.get(ITERATE_KEY);
-
+  if (type === "ADD" || type === "DELETE") {
+    // for ... in effects
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+    iterateEffects &&
+      iterateEffects.forEach((effectFn) => {
+        if (effect !== activeEffect) {
+          effectsToRun.add(effectFn);
+        }
+      });
+  }
   effects &&
     effects.forEach((effect) => {
       if (effect !== activeEffect) {
         effectsToRun.add(effect);
-      }
-    });
-  iterateEffects &&
-    iterateEffects.forEach((effectFn) => {
-      if (effect !== activeEffect) {
-        effectsToRun.add(effectFn);
       }
     });
 
@@ -79,7 +93,7 @@ function trigger(target, key) {
   });
 }
 
-function effect(fn, options = {}) {
+export function effect(fn, options = {}) {
   const effectFn = () => {
     cleanup(effectFn);
     activeEffect = effectFn;
@@ -125,7 +139,7 @@ function flushJob() {
   });
 }
 
-function computed(getter) {
+export function computed(getter) {
   // value 用来缓存上一次计算值
   let value;
   // 是否需要重新计算
@@ -152,7 +166,7 @@ function computed(getter) {
   return obj;
 }
 
-function watch(source, cb, options = {}) {
+export function watch(source, cb, options = {}) {
   let getter;
   if (typeof source === "function") {
     getter = source;
@@ -203,24 +217,5 @@ function traverse(value, seen = new Set()) {
   }
   return value;
 }
-// below is not implementation, just example
 
-// watch(
-//   () => obj.foo,
-//   (value, oldVal) => {
-//     console.log("数据变化了", value, oldVal);
-//   },
-//   {
-//     immediate: true,
-//   }
-// );
 
-// obj.foo++;
-
-effect(() => {
-  for (const key in obj) {
-    console.log(key);
-  }
-});
-
-obj.bar = 'random';
