@@ -3,32 +3,78 @@ let effectStack = [];
 let shouldTrack = true;
 const bucket = new WeakMap();
 const ITERATE_KEY = Symbol();
+const MAP_KEY_ITERATE_KEY = Symbol();
 // 储存原始值到代理对象的映射
 const reactiveMap = new Map();
 
 const arrayInstrumentations = {};
 
-function iterationMethod () {
+function iterationMethod() {
   const target = this.raw;
-  const itr = target[Symbol.iterator](); 
+  const itr = target[Symbol.iterator]();
 
   const wrap = (val) => (typeof val === "object" ? reactive(val) : val);
 
   track(target, ITERATE_KEY);
   return {
     next() {
-      const {value, done} = itr.next();
+      const { value, done } = itr.next();
       return {
         value: value ? [wrap(value[0]), wrap(value[1])] : value,
-        done
+        done,
       };
     },
     // 实现可迭代协议 (有next 方法为实现了迭代器协议)
     [Symbol.iterator]() {
       return this;
-    }
+    },
   };
 }
+
+function valuesIterationMethod() {
+  const target = this.raw;
+  const itr = target.values();
+
+  const wrap = (val) => (typeof val === "object" ? reactive(val) : val);
+
+  track(target, ITERATE_KEY);
+
+  return {
+    next() {
+      const { value, done } = itr.next();
+      return {
+        value: wrap(value),
+        done,
+      };
+    },
+    [Symbol.iterator]() {
+      return this;
+    },
+  };
+}
+
+function keysIterationMethod() {
+  const target = this.raw;
+  const itr = target.keys();
+
+  const wrap = (val) => (typeof val === "object" ? reactive(val) : val);
+
+  track(target, MAP_KEY_ITERATE_KEY);
+
+  return {
+    next() {
+      const { value, done } = itr.next();
+      return {
+        value: wrap(value),
+        done,
+      };
+    },
+    [Symbol.iterator]() {
+      return this;
+    },
+  };
+}
+
 const mutableInstructions = {
   add(key) {
     const target = this.raw;
@@ -96,6 +142,8 @@ const mutableInstructions = {
 
   [Symbol.iterator]: iterationMethod,
   entries: iterationMethod,
+  values: valuesIterationMethod,
+  keys: keysIterationMethod,
 };
 
 ["includes", "indexOf", "lastIndexOf"].forEach((method) => {
@@ -262,10 +310,28 @@ function trigger(target, key, type, newVal) {
       }
     });
 
-  if (type === "ADD" || type === "DELETE" ||
-  // 如果操作类型是 SET, 并且目标对象是 Map 类型的数据，
-  // 也应该触发那些与 ITERATE_KEY 相关联的副作用函数重新执行
-  (type === 'SET' && Object.prototype.toString.call(target) === '[object Map]')) {
+  if (
+    (type === "ADD" || type === "DELETE") &&
+    Object.prototype.toString.call(target) === "[object Map]"
+  ) {
+    // 触发 map 的 key iteration 副作用
+    const iterateEffects = depsMap.get(MAP_KEY_ITERATE_KEY);
+    iterateEffects &&
+      iterateEffects.forEach((effectFn) => {
+        if (effectFn !== activeEffect) {
+          effectsToRun.add(effectFn);
+        }
+      });
+  }
+
+  if (
+    type === "ADD" ||
+    type === "DELETE" ||
+    // 如果操作类型是 SET, 并且目标对象是 Map 类型的数据，
+    // 也应该触发那些与 ITERATE_KEY 相关联的副作用函数重新执行
+    (type === "SET" &&
+      Object.prototype.toString.call(target) === "[object Map]")
+  ) {
     // for ... in effects
     const iterateEffects = depsMap.get(ITERATE_KEY);
     iterateEffects &&
