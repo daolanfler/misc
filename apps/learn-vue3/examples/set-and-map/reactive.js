@@ -7,6 +7,28 @@ const ITERATE_KEY = Symbol();
 const reactiveMap = new Map();
 
 const arrayInstrumentations = {};
+
+function iterationMethod () {
+  const target = this.raw;
+  const itr = target[Symbol.iterator](); 
+
+  const wrap = (val) => (typeof val === "object" ? reactive(val) : val);
+
+  track(target, ITERATE_KEY);
+  return {
+    next() {
+      const {value, done} = itr.next();
+      return {
+        value: value ? [wrap(value[0]), wrap(value[1])] : value,
+        done
+      };
+    },
+    // 实现可迭代协议 (有next 方法为实现了迭代器协议)
+    [Symbol.iterator]() {
+      return this;
+    }
+  };
+}
 const mutableInstructions = {
   add(key) {
     const target = this.raw;
@@ -71,6 +93,9 @@ const mutableInstructions = {
       callback.call(thisArg, wrap(v), wrap(k), this);
     });
   },
+
+  [Symbol.iterator]: iterationMethod,
+  entries: iterationMethod,
 };
 
 ["includes", "indexOf", "lastIndexOf"].forEach((method) => {
