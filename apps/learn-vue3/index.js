@@ -6,12 +6,15 @@ const ITERATE_KEY = Symbol();
 export function createReactive(obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
     get(target, key, receiver) {
+      // if (key === Symbol.iterator) {
+      //   console.log('读取了 Symbol.iterator 属性')
+      // }
       // 代理对象时，可以通过 raw 访问原始数据
       if (key === "raw") {
         return target;
       }
 
-      if (!isReadonly) {
+      if (!isReadonly && typeof key !== "symbol") {
         track(target, key);
       }
       // receiver 表示谁在读取属性
@@ -57,7 +60,7 @@ export function createReactive(obj, isShallow = false, isReadonly = false) {
 
     // for ... in
     ownKeys(target) {
-      track(target, Array.isArray(target) ? 'length' : ITERATE_KEY);
+      track(target, Array.isArray(target) ? "length" : ITERATE_KEY);
       return Reflect.ownKeys(target);
     },
 
@@ -131,22 +134,23 @@ function trigger(target, key, type, newVal) {
       }
     });
 
-  if (type === 'ADD' && Array.isArray(target)) {
-    const lengthEffects = depsMap.get('length');
-    lengthEffects && lengthEffects.forEach(effectFn => {
-      if (effectFn !== activeEffect) {
-        effectsToRun.add(effectFn);
-      }
-    });
+  if (type === "ADD" && Array.isArray(target)) {
+    const lengthEffects = depsMap.get("length");
+    lengthEffects &&
+      lengthEffects.forEach((effectFn) => {
+        if (effectFn !== activeEffect) {
+          effectsToRun.add(effectFn);
+        }
+      });
   }
-  
+
   // 如果操作的是数组，而且修改了数组的 length 属性
   if (Array.isArray(target) && key === "length") {
-    // 对于索引大于或等于新长度的元素 
+    // 对于索引大于或等于新长度的元素
     // 需要把所有相关联的副作用函数取出并添加到 effectsToRun 中待执行
     depsMap.forEach((effects, key) => {
       if (key >= newVal) {
-        effects.forEach(effectFn => {
+        effects.forEach((effectFn) => {
           if (effectFn !== activeEffect) {
             effectsToRun.add(effectFn);
           }
@@ -154,7 +158,7 @@ function trigger(target, key, type, newVal) {
       }
     });
   }
-  
+
   effectsToRun.forEach((effectFn) => {
     if (effectFn.options.scheduler) {
       effectFn.options.scheduler(effectFn);
