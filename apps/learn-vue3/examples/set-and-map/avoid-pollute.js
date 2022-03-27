@@ -1,9 +1,16 @@
 import { effect, reactive } from "./reactive.js";
 
-const p = reactive(new Map([["key", 1]]));
+const m = new Map();
+
+const p1 =reactive(m); 
+
+const p2 = reactive(new Map());
+
+// 把响应式数据设置到原始数据上的行为成为数据污染
+p1.set('p2', p2); 
 
 effect(() => {
-  console.log(p.get("key"));
-});
+  console.log(m.get('p2').size); 
+})
 
-p.set("key", 2);
+m.get('p2').set('foo', 1)

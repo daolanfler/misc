@@ -17,6 +17,7 @@ const mutableInstructions = {
     }
     return res;
   },
+
   delete(key) {
     const target = this.raw;
     const hadKey = target.has(key);
@@ -25,7 +26,51 @@ const mutableInstructions = {
       trigger(target, key, "DELETE");
     }
     return res;
-  }
+  },
+
+  get(key) {
+    // 获取原始对象
+    const target = this.raw;
+    const had = target.has(key);
+
+    track(target, key);
+    if (had) {
+      const res = target.get(key);
+      return typeof res === "object" ? reactive(res) : res;
+    }
+  },
+
+  set(key, value) {
+    const target = this.raw;
+    const had = target.has(key);
+    const oldVal = target.get(key);
+
+    // 获取原始数据，由于 value 本身可能已经是原始数据，所以此时 value.raw 不存在，则直接使用 value
+    // raw 可能与用户定义的属性同名，实际情况中应该用 symbol
+    // Set 类型的 add 方法、普通对象的写值操作，还有为数组添加元素的方法等，都需要做类似的处理。
+    const rawValue = value.raw || value;
+    const res = target.set(key, rawValue);
+
+    if (!had) {
+      trigger(target, key, "ADD");
+    } else if (
+      value !== oldVal ||
+      (typeof value === "object" && value !== null)
+    ) {
+      trigger(target, key, "SET", value);
+    }
+    return res;
+  },
+
+  forEach(callback, thisArg) {
+    const wrap = (val) => (typeof val === "object" ? reactive(val) : val);
+    const target = this.raw;
+    track(target, ITERATE_KEY);
+
+    target.forEach((v, k) => {
+      callback.call(thisArg, wrap(v), wrap(k), this);
+    });
+  },
 };
 
 ["includes", "indexOf", "lastIndexOf"].forEach((method) => {
@@ -185,7 +230,17 @@ function trigger(target, key, type, newVal) {
   const effects = depsMap.get(key);
   const effectsToRun = new Set();
 
-  if (type === "ADD" || type === "DELETE") {
+  effects &&
+    effects.forEach((effect) => {
+      if (effect !== activeEffect) {
+        effectsToRun.add(effect);
+      }
+    });
+
+  if (type === "ADD" || type === "DELETE" ||
+  // 如果操作类型是 SET, 并且目标对象是 Map 类型的数据，
+  // 也应该触发那些与 ITERATE_KEY 相关联的副作用函数重新执行
+  (type === 'SET' && Object.prototype.toString.call(target) === '[object Map]')) {
     // for ... in effects
     const iterateEffects = depsMap.get(ITERATE_KEY);
     iterateEffects &&
@@ -195,13 +250,6 @@ function trigger(target, key, type, newVal) {
         }
       });
   }
-
-  effects &&
-    effects.forEach((effect) => {
-      if (effect !== activeEffect) {
-        effectsToRun.add(effect);
-      }
-    });
 
   if (type === "ADD" && Array.isArray(target)) {
     const lengthEffects = depsMap.get("length");
