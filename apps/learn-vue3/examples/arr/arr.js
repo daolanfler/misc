@@ -1,4 +1,4 @@
-import { reactive, effect } from "../index.js";
+import { reactive, effect } from "../../index.js";
 
 const arr =reactive(['foo', "bar"]);
 
@@ -35,3 +35,4 @@ effect(() => {
 });
 
 arr[0] = 'random';
+

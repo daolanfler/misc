@@ -2,6 +2,23 @@ let activeEffect;
 let effectStack = [];
 const bucket = new WeakMap();
 const ITERATE_KEY = Symbol();
+// 储存原始值到代理对象的映射
+const reactiveMap = new Map();
+
+const arrayInstrumentations = {};
+
+["includes", "indexOf", "lastIndexOf"].forEach((method) => {
+  const original = Array.prototype[method];
+  arrayInstrumentations[method] = function (...args) {
+    // this 指向代理对象 
+    let res = original.apply(this, args);
+
+    if (res === false) {
+      res = original.apply(this.raw, args);
+    }
+    return res; 
+  };
+});
 
 export function createReactive(obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
@@ -12,6 +29,14 @@ export function createReactive(obj, isShallow = false, isReadonly = false) {
       // 代理对象时，可以通过 raw 访问原始数据
       if (key === "raw") {
         return target;
+      }
+
+      // 重写部分数组上的方法
+      if (
+        Array.isArray(target) &&
+        Object.prototype.hasOwnProperty.call(arrayInstrumentations, key)
+      ) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
       }
 
       if (!isReadonly && typeof key !== "symbol") {
@@ -81,7 +106,12 @@ export function createReactive(obj, isShallow = false, isReadonly = false) {
 }
 
 export function reactive(obj) {
-  return createReactive(obj, false);
+  const exsistionProxy = reactiveMap.get(obj);
+  if (exsistionProxy) return exsistionProxy;
+  const proxy = createReactive(obj, false);
+  // 储存到 Map 中，从而帮忙重复创建
+  reactiveMap.set(obj, proxy);
+  return proxy;
 }
 
 export function shallowReactive(obj) {
