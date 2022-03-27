@@ -1,5 +1,6 @@
 let activeEffect;
 let effectStack = [];
+let shouldTrack = true;
 const bucket = new WeakMap();
 const ITERATE_KEY = Symbol();
 // 储存原始值到代理对象的映射
@@ -19,6 +20,18 @@ const arrayInstrumentations = {};
     return res; 
   };
 });
+
+["push", "pop", "shift", "unshift", "splice", ].forEach(method => {
+  const original = Array.prototype[method];
+  arrayInstrumentations[method] = function (...args) {
+    shouldTrack = false;
+    const res = original.apply(this, args);
+    shouldTrack = true;
+    return res;
+  };
+}
+);
+
 
 export function createReactive(obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
@@ -80,7 +93,7 @@ export function createReactive(obj, isShallow = false, isReadonly = false) {
     // in
     has(target, key) {
       track(target, key);
-      return Reflect.ha(target, key);
+      return Reflect.has(target, key);
     },
 
     // for ... in
@@ -127,7 +140,7 @@ export function shallowReadonly(obj) {
 }
 
 function track(target, key) {
-  if (!activeEffect) return;
+  if (!activeEffect || !shouldTrack) return;
   let depsMap = bucket.get(target);
   if (!depsMap) {
     bucket.set(target, (depsMap = new Map()));
