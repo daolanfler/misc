@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite"
   },
   "author": "daolanfler",
   "license": "ISC",
@@ -13,6 +14,7 @@
     "config": "workspace:*"
   },
   "dependencies": {
-    "@vue/reactivity": "^3.2.31"
+    "@vue/reactivity": "^3.2.31",
+    "vite": "^2.8.6"
   }
 }
