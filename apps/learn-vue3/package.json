@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "config": "workspace:*"
+  },
+  "dependencies": {
+    "@vue/reactivity": "^3.2.31"
   }
 }

@@ -11,6 +11,6 @@ p1.set('p2', p2);
 
 effect(() => {
   console.log(m.get('p2').size); 
-})
+});
 
-m.get('p2').set('foo', 1)
+m.get('p2').set('foo', 1);
