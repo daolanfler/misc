@@ -42,6 +42,7 @@ importers:
       '@babel/core': ^7.17.8
       '@babel/eslint-parser': ^7.17.0
       '@tsconfig/node16': ^1.0.2
+      '@type-challenges/utils': ^0.1.1
       '@typescript-eslint/eslint-plugin': ^5.3.0
       '@typescript-eslint/parser': ^5.3.0
       eslint: ^8.11.0
@@ -51,6 +52,7 @@ importers:
       '@babel/core': 7.17.8
       '@babel/eslint-parser': 7.17.0_@babel+core@7.17.8+eslint@8.11.0
       '@tsconfig/node16': 1.0.2
+      '@type-challenges/utils': 0.1.1
       '@typescript-eslint/eslint-plugin': 5.15.0_ace6f9e7722b813e21eaf2dc993bc413
       '@typescript-eslint/parser': 5.14.0_eslint@8.11.0+typescript@4.6.2
       eslint: 8.11.0
@@ -598,6 +600,10 @@ packages:
 
   /@tsconfig/node16/1.0.2:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
+    dev: true
+
+  /@type-challenges/utils/0.1.1:
+    resolution: {integrity: sha512-A7ljYfBM+FLw+NDyuYvGBJiCEV9c0lPWEAdzfOAkb3JFqfLl0Iv/WhWMMARHiRKlmmiD1g8gz/507yVvHdQUYA==}
     dev: true
 
   /@types/json-schema/7.0.10:
