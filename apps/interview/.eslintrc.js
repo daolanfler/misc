@@ -39,9 +39,11 @@ module.exports = {
       rules: {
         indent: ["error", 2, { SwitchCase: 1 }],
         "linebreak-style": ["error", "unix"],
-        quotes: ["error", "single"],
+        // quotes: ["error", "single"],
+        quotes: 0,
         "comma-dangle": ["error", "always-multiline"],
         "@typescript-eslint/no-explicit-any": 0,
+        "@typescript-eslint/ban-ts-comment": ["error", {"ts-expect-error": false}],
       },
       settings: { react: { version: "detect" } },
     },
