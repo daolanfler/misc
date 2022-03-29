@@ -17,16 +17,28 @@ function createRenderer(options) {
   const { createElement, insert, setElementText, patchProps } = options;
 
   function patch(n1, n2, container) {
-    if (!n1) {
-      mountElement(n2, container);
+    if (n1 && n1.type !== n2.type) {
+      // 如果 n1 存在，新旧node 的类型不同则直接卸载
+      unmount(n1);
+      n1 = null;
+    }
+    const { type } = n2;
+    if (typeof type === "string") {
+      if (!n1) {
+        mountElement(n2, container);
+      } else {
+        // patchElement(n1, n2)
+      }
+    } else if (typeof type === "object") {
+      // 组件
     } else {
-      //
+      // other type vnode
     }
   }
 
   function mountElement(vnode, container) {
     // el 引用真实的 DOM 元素
-    const el = vnode.el = createElement(vnode.type);
+    const el = (vnode.el = createElement(vnode.type));
     if (vnode.props) {
       for (const key in vnode.props) {
         patchProps(el, key, null, vnode.props[key]);
@@ -103,11 +115,10 @@ const vnode = {
   props: {
     class: {
       foo: true,
-      bar: true
-    }
+      bar: true,
+    },
   },
   children: "Hello World",
-
 };
 
 const container = { type: "root" };
