@@ -8,6 +8,7 @@
   ],
   "files.autoSave": "onFocusChange",
   "conventionalCommits.scopes": [
-    "learn-vue3"
+    "learn-vue3",
+    "tch"
   ]
 }
