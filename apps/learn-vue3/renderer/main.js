@@ -13,22 +13,31 @@ import { effect, ref } from "@vue/reactivity";
 // count.value++;
 
 function createRenderer(options) {
-  const { createElement, insert, setElementText } = options;
+  const { createElement, insert, setElementText, patchProps } = options;
 
   function patch(n1, n2, container) {
     if (!n1) {
       mountElement(n2, container);
     } else {
-      //
+    // 
     }
   }
 
   function mountElement(vnode, container) {
     const el = createElement(vnode.type);
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        patchProps(el, key, null, vnode.props[key]);
+      }
+    }
     if (typeof vnode.children === "string") {
       setElementText(el, vnode.children);
-    }
+    } else if (Array.isArray(vnode.children)) {
+      vnode.children.forEach(child => {
+        patch(null, child, el);
+      });
 
+    }
     insert(el, container);
   }
 
@@ -60,7 +69,24 @@ const renderer = createRenderer({
     console.log(parent);
     parent.children = el;
   },
+  patchProps(el, key, preValue, nextValue) {
+    // Difference between DOM Properties and HTML Attributes 
+    if (shouldSetAsProps(el, key, nextValue)) {
+      const type = typeof el[key];
+      if (type === 'boolean' && nextValue === '') {
+        el[key] = true;
+      } else {
+        el[key] = nextValue;
+      }
+    } else {
+      el.setAttribute(key, vnode.props[key]);
+    }
+  }
 });
+
+function shouldSetAsProps(el, key, nextValue) {
+  return key in el;
+}
 
 const vnode = {
   type: 'h1',
