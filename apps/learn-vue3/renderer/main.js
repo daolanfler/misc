@@ -1,4 +1,5 @@
 import { effect, ref } from "@vue/reactivity";
+import { normalizeClass } from "./shared";
 
 // function renderer(domString, container) {
 //   container.innerHTML = domString;
@@ -19,12 +20,13 @@ function createRenderer(options) {
     if (!n1) {
       mountElement(n2, container);
     } else {
-    // 
+      //
     }
   }
 
   function mountElement(vnode, container) {
-    const el = createElement(vnode.type);
+    // el 引用真实的 DOM 元素
+    const el = vnode.el = createElement(vnode.type);
     if (vnode.props) {
       for (const key in vnode.props) {
         patchProps(el, key, null, vnode.props[key]);
@@ -33,12 +35,18 @@ function createRenderer(options) {
     if (typeof vnode.children === "string") {
       setElementText(el, vnode.children);
     } else if (Array.isArray(vnode.children)) {
-      vnode.children.forEach(child => {
+      vnode.children.forEach((child) => {
         patch(null, child, el);
       });
-
     }
     insert(el, container);
+  }
+
+  function unmount(vnode) {
+    const parent = vnode.el.parentNode;
+    if (parent) {
+      parent.removeChild(vnode.el);
+    }
   }
 
   function render(vnode, container) {
@@ -46,7 +54,7 @@ function createRenderer(options) {
       patch(container._vnode, vnode, container);
     } else {
       if (container._vnode) {
-        container.innerHTML = "";
+        unmount(container._vnode);
       }
     }
     container._vnode = vnode;
@@ -70,10 +78,12 @@ const renderer = createRenderer({
     parent.children = el;
   },
   patchProps(el, key, preValue, nextValue) {
-    // Difference between DOM Properties and HTML Attributes 
-    if (shouldSetAsProps(el, key, nextValue)) {
+    // Difference between DOM Properties and HTML Attributes
+    if (key === "class") {
+      el.className = normalizeClass(nextValue) || "";
+    } else if (shouldSetAsProps(el, key, nextValue)) {
       const type = typeof el[key];
-      if (type === 'boolean' && nextValue === '') {
+      if (type === "boolean" && nextValue === "") {
         el[key] = true;
       } else {
         el[key] = nextValue;
@@ -81,7 +91,7 @@ const renderer = createRenderer({
     } else {
       el.setAttribute(key, vnode.props[key]);
     }
-  }
+  },
 });
 
 function shouldSetAsProps(el, key, nextValue) {
@@ -89,10 +99,17 @@ function shouldSetAsProps(el, key, nextValue) {
 }
 
 const vnode = {
-  type: 'h1',
-  children: 'Hello World',
+  type: "h1",
+  props: {
+    class: {
+      foo: true,
+      bar: true
+    }
+  },
+  children: "Hello World",
+
 };
 
-const container = {type: 'root'};
+const container = { type: "root" };
 
 renderer.render(vnode, container);
