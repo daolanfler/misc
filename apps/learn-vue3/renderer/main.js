@@ -26,6 +26,7 @@ function createRenderer(options) {
     patchProps,
   } = options;
   function patchElement(n1, n2) {
+    // DOM 节点的复用
     const el = (n2.el = n1.el);
     const oldProps = n1.props;
     const newProps = n2.props;
@@ -55,8 +56,28 @@ function createRenderer(options) {
     } else if (Array.isArray(n2.children)) {
       if (Array.isArray(n1.children)) {
         // 核心 diff 算法
-        n1.children.forEach((c) => unmount(c));
-        n2.children.forEach((c) => patch(null, c, container));
+        // n1.children.forEach((c) => unmount(c));
+        // n2.children.forEach((c) => patch(null, c, container));
+        const oldChildren = n1.children;
+        const newChildren = n2.children;
+
+        let lastIndex = 0;
+        for (let i = 0; i < newChildren.length; i++) {
+          const newVNode = newChildren[i];
+          for (let j = 0; j < oldChildren.length; j++) {
+            const oldVNode = oldChildren[j];
+            if (newVNode.key === oldVNode.key) {
+              patch(oldVNode, newVNode, container);
+              if (j < lastIndex) {
+                // 需要移动的节点
+                // 如果当前找到的节点在旧 children 中的索引小于最大的索引值 lastIndex 
+              } else {
+                lastIndex = j;
+              }
+              break;
+            }
+          }
+        }
       } else {
         setElementText(container, "");
         n2.children.forEach((c) => patch(null, c, container));
@@ -130,8 +151,7 @@ function createRenderer(options) {
 
   function unmount(vnode) {
     if (vnode.type === Fragment) {
-      
-      vnode.children.forEach(c => unmount(c));
+      vnode.children.forEach((c) => unmount(c));
       return;
     }
     const parent = vnode.el.parentNode;
@@ -236,10 +256,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-        onClick: () => {
-          alert("父元素 clicked");
-        },
-      }
+          onClick: () => {
+            alert("父元素 clicked");
+          },
+        }
       : {},
     children: [
       {
