@@ -141,7 +141,7 @@ const renderer = createRenderer({
         if (!invoker) {
           invoker = el._vei[key] = (e) => {
             // 事件触发时间早于函数绑定时间，则不执行事件处理函数
-            if (e.timestamp < invoker.attached) return;
+            if (e.timeStamp < invoker.attached) return;
             if (Array.isArray(invoker.value)) {
               invoker.value.forEach((fn) => fn(e));
             } else {
