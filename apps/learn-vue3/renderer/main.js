@@ -70,7 +70,13 @@ function createRenderer(options) {
               patch(oldVNode, newVNode, container);
               if (j < lastIndex) {
                 // 需要移动的节点
-                // 如果当前找到的节点在旧 children 中的索引小于最大的索引值 lastIndex 
+                // 如果当前找到的节点在旧 children 中的索引小于最大的索引值 lastIndex
+                const prevVNode = newChildren[i -1 ]
+                if (prevVNode ){
+                  // 需要节点的 DOM 移动到 preVNode 所对应的真实 DOM 的后面
+                  const anchor = prevVNode.el.nextSibling;
+                  insert(newVNode.el, container, anchor)
+                }
               } else {
                 lastIndex = j;
               }
@@ -182,7 +188,7 @@ const renderer = createRenderer({
     el.innerText = text;
   },
   insert(el, parent, anchor = null) {
-    parent.appendChild(el);
+    parent.insertBefore(el, anchor)
   },
   createText(text) {
     return document.createTextNode(text);
@@ -256,10 +262,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-          onClick: () => {
-            alert("父元素 clicked");
-          },
-        }
+        onClick: () => {
+          alert("父元素 clicked");
+        },
+      }
       : {},
     children: [
       {
