@@ -1,6 +1,9 @@
 import { effect, ref } from "@vue/reactivity";
 import { normalizeClass } from "./shared";
 
+const Text = Symbol();
+const Comment = Symbol();
+const Fragment = Symbol();
 // function renderer(domString, container) {
 //   container.innerHTML = domString;
 // }
@@ -14,8 +17,15 @@ import { normalizeClass } from "./shared";
 // count.value++;
 
 function createRenderer(options) {
-  const { createElement, insert, setElementText, patchProps } = options;
-  function patchElement(n1, n2, ) {
+  const {
+    createElement,
+    insert,
+    setElementText,
+    createText,
+    setText,
+    patchProps,
+  } = options;
+  function patchElement(n1, n2) {
     const el = (n2.el = n1.el);
     const oldProps = n1.props;
     const newProps = n2.props;
@@ -45,17 +55,17 @@ function createRenderer(options) {
     } else if (Array.isArray(n2.children)) {
       if (Array.isArray(n1.children)) {
         // 核心 diff 算法
-        n1.children.forEach(c => unmount(c));
-        n2.children.forEach(c => patch(null, c, container));
+        n1.children.forEach((c) => unmount(c));
+        n2.children.forEach((c) => patch(null, c, container));
       } else {
-        setElementText(container, '');
-        n2.children.forEach(c => patch(null, c, container));
+        setElementText(container, "");
+        n2.children.forEach((c) => patch(null, c, container));
       }
     } else {
       if (Array.isArray(n1.children)) {
-        n1.children.forEach(c => unmount(c));
-      } else if (typeof n1.children === 'string') {
-        setElementText(container, '');
+        n1.children.forEach((c) => unmount(c));
+      } else if (typeof n1.children === "string") {
+        setElementText(container, "");
       }
     }
   }
@@ -72,6 +82,24 @@ function createRenderer(options) {
         mountElement(n2, container);
       } else {
         patchElement(n1, n2);
+      }
+    } else if (type === Text) {
+      if (!n1) {
+        const el = (n2.el = createText(n2.children));
+        insert(el, container);
+      } else {
+        const el = (n2.el = n1.el);
+        // 如果旧节点存在则直接更新节点
+        if (n2.children !== n1.children) {
+          // el.nodeValue = n2.children;
+          setText(el, n2.children);
+        }
+      }
+    } else if (type === Fragment) {
+      if (!n1) {
+        n2.children.forEAch((c) => patch(null, c, container));
+      } else {
+        patchChildren(n1, n2, container);
       }
     } else if (typeof type === "object") {
       // 组件
@@ -101,6 +129,11 @@ function createRenderer(options) {
   }
 
   function unmount(vnode) {
+    if (vnode.type === Fragment) {
+      
+      vnode.children.forEach(c => unmount(c));
+      return;
+    }
     const parent = vnode.el.parentNode;
     if (parent) {
       parent.removeChild(vnode.el);
@@ -130,6 +163,12 @@ const renderer = createRenderer({
   },
   insert(el, parent, anchor = null) {
     parent.appendChild(el);
+  },
+  createText(text) {
+    return document.createTextNode(text);
+  },
+  setText(el, text) {
+    el.nodeValue = text;
   },
   patchProps(el, key, preValue, nextValue) {
     // Difference between DOM Properties and HTML Attributes
