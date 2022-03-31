@@ -64,9 +64,13 @@ function createRenderer(options) {
         let lastIndex = 0;
         for (let i = 0; i < newChildren.length; i++) {
           const newVNode = newChildren[i];
+          let find = false;
+
+          // 遍历旧 children 
           for (let j = 0; j < oldChildren.length; j++) {
             const oldVNode = oldChildren[j];
             if (newVNode.key === oldVNode.key) {
+              find = true 
               patch(oldVNode, newVNode, container);
               if (j < lastIndex) {
                 // 需要移动的节点
@@ -83,6 +87,19 @@ function createRenderer(options) {
               break;
             }
           }
+          // 当前 newVNode 为新增节点
+          if (!find) {
+            const prevVNode = newChildren[i - 1];
+            let anchor = null;
+            if (prevVNode) {
+              anchor.el.nextSibling
+            } else {
+              anchor = container.firstChild;
+            }
+            patch(null, newVNode, container, anchor)
+
+          }
+
         }
       } else {
         setElementText(container, "");
@@ -97,7 +114,7 @@ function createRenderer(options) {
     }
   }
 
-  function patch(n1, n2, container) {
+  function patch(n1, n2, container, anchor) {
     if (n1 && n1.type !== n2.type) {
       // 如果 n1 存在，新旧node 的类型不同则直接卸载
       unmount(n1);
@@ -106,7 +123,7 @@ function createRenderer(options) {
     const { type } = n2;
     if (typeof type === "string") {
       if (!n1) {
-        mountElement(n2, container);
+        mountElement(n2, container, anchor);
       } else {
         patchElement(n1, n2);
       }
@@ -135,7 +152,7 @@ function createRenderer(options) {
     }
   }
 
-  function mountElement(vnode, container) {
+  function mountElement(vnode, container, anchor) {
     // el 引用真实的 DOM 元素
     const el = (vnode.el = createElement(vnode.type));
     if (typeof vnode.children === "string") {
@@ -152,7 +169,7 @@ function createRenderer(options) {
       }
     }
 
-    insert(el, container);
+    insert(el, container, anchor);
   }
 
   function unmount(vnode) {
