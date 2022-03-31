@@ -99,7 +99,15 @@ function createRenderer(options) {
             patch(null, newVNode, container, anchor)
 
           }
+        }
 
+        // 遍历旧的一组子节点，如果不在新的一组子节点当中，则说明要删除该节点的 DOM 
+        for (let i = 0; i < oldChildren.length; i ++) {
+          const oldVNode = oldChildren[i]
+          const has = newChildren.find(vnode => vnode.key === oldVNode.key)
+          if (!has) {
+            unmount(oldVNode)
+          }
         }
       } else {
         setElementText(container, "");
