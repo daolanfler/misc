@@ -25,26 +25,81 @@ function createRenderer(options) {
     setText,
     patchProps,
   } = options;
-  
+
   function patchKeyedChildren(n1, n2, container) {
     const oldChildren = n1.children;
     const newChildren = n2.children;
 
-    const oldStartIdx = 0;
-    const oldEndIdx = oldChildren.length - 1;
-    const newStartIdx = 0;
-    const newEndIdx = newChildren.length - 1;
+    let oldStartIdx = 0;
+    let oldEndIdx = oldChildren.length - 1;
+    let newStartIdx = 0;
+    let newEndIdx = newChildren.length - 1;
 
-    let oldStartVNode = oldChildren[oldStartIdx]
-    let oldEndVNode = oldChildren[oldEndIdx]
-    let newStartVNode = newChildren[newStartIdx]
-    let newEndVNode = newChildren[newEndIdx]
+    let oldStartVNode = oldChildren[oldStartIdx];
+    let oldEndVNode = oldChildren[oldEndIdx];
+    let newStartVNode = newChildren[newStartIdx];
+    let newEndVNode = newChildren[newEndIdx];
 
-    if (oldStartVNode.key = newStartVNode.key) {
-      // 
+    while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      if (!oldStartVNode) {
+        oldStartVNode = oldChildren[++oldStartIdx];
+      } else if (!oldEndVNode) {
+        oldEndVNode = oldChildren[--oldEndIdx];
+      } else if (oldStartVNode.key === newStartVNode.key) {
+        patch(oldStartVNode, newStartVNode, container);
+
+        oldStartVNode = oldChildren[++oldStartIdx];
+        newStartVNode = newChildren[++newStartIdx];
+      } else if (oldEndVNode.key === newEndVNode.key) {
+        patch(oldEndVNode, newStartVNode, container);
+
+        oldEndVNode = oldChildren[--oldEndIdx];
+        newEndVNode = newChildren[--newEndIdx];
+      } else if (oldStartVNode.key === newEndVNode.key) {
+        patch(oldStartVNode, newEndVNode, container);
+        // 将旧的头部节点的真实 DOM 移动到 旧的尾部节点的真实 DOM 之后
+        insert(oldStartVNode.el, container, oldEndVNode.el.nextSibling);
+
+        oldStartVNode = oldChildren[++oldStartIdx];
+        newEndVNode = newChildren[--newEndIdx];
+      } else if (oldEndVNode.key === newStartVNode.key) {
+        patch(oldEndVNode, newStartVNode, container);
+
+        insert(oldEndVNode.el, container, oldStartVNode.el);
+
+        oldEndVNode = oldChildren[--oldEndIdx];
+        newStartVNode = newChildren[++newStartIdx];
+      } else {
+        const idxInOld = oldChildren.findIndex(
+          (node) => node.key === newStartVNode.key
+        );
+        if (idxInOld > 0) {
+          const vnodeToMove = oldChildren(idxInOld);
+
+          patch(vnodeToMove, newStartVNode, container);
+
+          insert(vnodeToMove.el, container, oldStartVNode.el);
+
+          oldChildren[idxInOld] = undefined;
+        } else {
+          patch(null, newStartVNode, container, oldStartVNode.el);
+        }
+        newStartVNode = newChildren[++newStartIdx];
+      }
+    }
+
+    // 循环结束检查索引状况，如果满足条件说明有遗漏的状况。
+    if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+      for (let i = newStartIdx; i <= newEndIdx; i++) {
+        patch(null, newChildren[i], container, oldStartVNode.el);
+      }
+    } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
+      for (let i = oldStartIdx; i <= oldEndIdx; i++) {
+        unmount(oldChildren[i]);
+      }
     }
   }
-  
+
   function patchElement(n1, n2) {
     // DOM 节点的复用
     const el = (n2.el = n1.el);
@@ -75,7 +130,7 @@ function createRenderer(options) {
       setElementText(container, n2.children);
     } else if (Array.isArray(n2.children)) {
       if (Array.isArray(n1.children)) {
-        patchKeyedChildren(n1, n2, container)
+        patchKeyedChildren(n1, n2, container);
       } else {
         setElementText(container, "");
         n2.children.forEach((c) => patch(null, c, container));
@@ -180,7 +235,7 @@ const renderer = createRenderer({
     el.innerText = text;
   },
   insert(el, parent, anchor = null) {
-    parent.insertBefore(el, anchor)
+    parent.insertBefore(el, anchor);
   },
   createText(text) {
     return document.createTextNode(text);
@@ -254,10 +309,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-        onClick: () => {
-          alert("父元素 clicked");
-        },
-      }
+          onClick: () => {
+            alert("父元素 clicked");
+          },
+        }
       : {},
     children: [
       {
