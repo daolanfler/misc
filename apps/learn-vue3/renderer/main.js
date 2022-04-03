@@ -1,5 +1,5 @@
 import { effect, ref } from "@vue/reactivity";
-import { normalizeClass } from "./shared";
+import { getSequence, normalizeClass } from "./shared";
 
 const Text = Symbol();
 const Comment = Symbol();
@@ -27,75 +27,111 @@ function createRenderer(options) {
   } = options;
 
   function patchKeyedChildren(n1, n2, container) {
-    const oldChildren = n1.children;
     const newChildren = n2.children;
+    const oldChildren = n1.children;
 
-    let oldStartIdx = 0;
-    let oldEndIdx = oldChildren.length - 1;
-    let newStartIdx = 0;
-    let newEndIdx = newChildren.length - 1;
-
-    let oldStartVNode = oldChildren[oldStartIdx];
-    let oldEndVNode = oldChildren[oldEndIdx];
-    let newStartVNode = newChildren[newStartIdx];
-    let newEndVNode = newChildren[newEndIdx];
-
-    while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-      if (!oldStartVNode) {
-        oldStartVNode = oldChildren[++oldStartIdx];
-      } else if (!oldEndVNode) {
-        oldEndVNode = oldChildren[--oldEndIdx];
-      } else if (oldStartVNode.key === newStartVNode.key) {
-        patch(oldStartVNode, newStartVNode, container);
-
-        oldStartVNode = oldChildren[++oldStartIdx];
-        newStartVNode = newChildren[++newStartIdx];
-      } else if (oldEndVNode.key === newEndVNode.key) {
-        patch(oldEndVNode, newStartVNode, container);
-
-        oldEndVNode = oldChildren[--oldEndIdx];
-        newEndVNode = newChildren[--newEndIdx];
-      } else if (oldStartVNode.key === newEndVNode.key) {
-        patch(oldStartVNode, newEndVNode, container);
-        // 将旧的头部节点的真实 DOM 移动到 旧的尾部节点的真实 DOM 之后
-        insert(oldStartVNode.el, container, oldEndVNode.el.nextSibling);
-
-        oldStartVNode = oldChildren[++oldStartIdx];
-        newEndVNode = newChildren[--newEndIdx];
-      } else if (oldEndVNode.key === newStartVNode.key) {
-        patch(oldEndVNode, newStartVNode, container);
-
-        insert(oldEndVNode.el, container, oldStartVNode.el);
-
-        oldEndVNode = oldChildren[--oldEndIdx];
-        newStartVNode = newChildren[++newStartIdx];
-      } else {
-        const idxInOld = oldChildren.findIndex(
-          (node) => node.key === newStartVNode.key
-        );
-        if (idxInOld > 0) {
-          const vnodeToMove = oldChildren(idxInOld);
-
-          patch(vnodeToMove, newStartVNode, container);
-
-          insert(vnodeToMove.el, container, oldStartVNode.el);
-
-          oldChildren[idxInOld] = undefined;
-        } else {
-          patch(null, newStartVNode, container, oldStartVNode.el);
-        }
-        newStartVNode = newChildren[++newStartIdx];
-      }
+    let j = 0;
+    let oldVNode = oldChildren[j];
+    let newVNode = newChildren[j];
+    while (oldVNode.key === newVNode.key) {
+      patch(oldVNode, newVNode, container);
+      j++;
+      oldVNode = oldChildren[j];
+      newVNode = newChildren[j];
     }
 
-    // 循环结束检查索引状况，如果满足条件说明有遗漏的状况。
-    if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
-      for (let i = newStartIdx; i <= newEndIdx; i++) {
-        patch(null, newChildren[i], container, oldStartVNode.el);
+    let oldEnd = oldChildren.length - 1;
+    let newEnd = newChildren.length - 1;
+
+    oldVNode = oldChildren[oldEnd];
+    newVNode = newChildren[newEnd];
+
+    while (oldVNode.key === newVNode.key) {
+      patch(oldVNode, newVNode, container);
+      oldEnd--;
+      newEnd--;
+      oldVNode = oldChildren[oldEnd];
+      newVNode = newChildren[newEnd];
+    }
+
+    if (j > oldEnd && j <= newEnd) {
+      const anchorIndex = newEnd + 1;
+      const anchor =
+        anchorIndex < newChildren.length ? newChildren[anchorIndex] : null;
+
+      while (j <= newEnd) {
+        patch(null, newChildren[j++], container, anchor);
       }
-    } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
-      for (let i = oldStartIdx; i <= oldEndIdx; i++) {
-        unmount(oldChildren[i]);
+    } else if (j > newEnd && j <= oldEnd) {
+      while (j <= oldEnd) {
+        unmount(oldChildren[j++]);
+      }
+    } else {
+      const count = newEnd - j + 1;
+      const sources = new Array(count);
+      sources.fill(-1);
+
+      const oldStart = j;
+      const newStart = j;
+
+      let moved = false;
+      let pos = 0;
+      const keyIndex = {};
+      for (let i = newStart; i <= newEnd; i++) {
+        keyIndex[newChildren[i].key] = i;
+      }
+
+      let patched = 0; // 更新过的节点数量
+      for (let i = oldStart; i < oldEnd; i++) {
+        oldVNode = oldChildren[i];
+        if (patched <= count) {
+          const k = keyIndex[oldVNode.key];
+          if (typeof k !== "undefined") {
+            newVNode = newChildren[k];
+            patch(oldVNode, newVNode, container);
+            patched++;
+            sources[k - newStart] = i;
+            if (k < pos) {
+              moved = true;
+            } else {
+              pos = k;
+            }
+          } else {
+            unmount(oldVNode);
+          }
+        } else {
+          unmount(oldVNode);
+        }
+      }
+      if (moved) {
+        const seq = getSequence(sources);
+
+        let s = seq.length - 1;
+        let i = count - 1;
+
+        for (i; i >= 0; i--) {
+          if (sources[i] === -1) {
+            // 是新增
+            const pos = i + newStart;
+            const newVNode = newChildren[pos];
+
+            const nextPos = pos + 1;
+            const anchor =
+              nextPos < newChildren.length ? newChildren[nextPos].el : null;
+            patch(null, newVNode, container, anchor);
+          } else if (i !== seq[s]) {
+            // 该节点需要移动
+            const pos = i + newStart;
+            const newVNode = newChildren[pos]
+            const nextPos = pos + 1;
+            const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : null 
+            // 上面的循环有 patch 过，newVNode 上有 el
+            insert(newVNode.el, container, anchor)
+          } else {
+            // 该节点不需要移动 (最长递增子序列的含义)
+            s--;
+          }
+        }
       }
     }
   }
