@@ -122,11 +122,12 @@ function createRenderer(options) {
           } else if (i !== seq[s]) {
             // 该节点需要移动
             const pos = i + newStart;
-            const newVNode = newChildren[pos]
+            const newVNode = newChildren[pos];
             const nextPos = pos + 1;
-            const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : null 
+            const anchor =
+              nextPos < newChildren.length ? newChildren[nextPos].el : null;
             // 上面的循环有 patch 过，newVNode 上有 el
-            insert(newVNode.el, container, anchor)
+            insert(newVNode.el, container, anchor);
           } else {
             // 该节点不需要移动 (最长递增子序列的含义)
             s--;
