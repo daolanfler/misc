@@ -10,5 +10,5 @@ export function onMounted(fn) {
   } else {
     console.error('onMounted 只能在 setup 中调用')
   }
-
 }
+

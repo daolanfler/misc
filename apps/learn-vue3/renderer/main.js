@@ -7,9 +7,9 @@ import {
 } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { getSequence, normalizeClass } from "./shared";
-import { setCurrentInstance } from "./shared/currentInstance";
+import { setCurrentInstance } from "./shared/lifecycle";
 
-const Text = Symbol();
+export const Text = Symbol();
 const Comment = Symbol();
 const Fragment = Symbol();
 
@@ -221,7 +221,7 @@ function createRenderer(options) {
       } else {
         patchChildren(n1, n2, container);
       }
-    } else if (typeof type === "object") {
+    } else if (typeof type === "object" || typeof type === "function") {
       // 组件
       if (!n1) {
         mountComponent(n2, container, anchor);
@@ -276,7 +276,14 @@ function createRenderer(options) {
   }
 
   function mountComponent(vnode, container, anchor) {
-    const componentOptions = vnode.type;
+    const isFunctional = typeof vnode.type === "function";
+    let componentOptions = vnode.type;
+    if (isFunctional) {
+      componentOptions = {
+        render: vnode.type,
+        porps: vnode.type.props,
+      };
+    }
 
     let {
       render,
@@ -411,6 +418,10 @@ function createRenderer(options) {
     if (vnode.type === Fragment) {
       vnode.children.forEach((c) => unmount(c));
       return;
+    } else if (typeof vnode.type === "object") {
+      // 组件的卸载
+      unmount(vnode.component.subTree);
+      return;
     }
     const parent = vnode.el.parentNode;
     if (parent) {
@@ -539,10 +550,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-        onClick: () => {
-          alert("父元素 clicked");
-        },
-      }
+          onClick: () => {
+            alert("父元素 clicked");
+          },
+        }
       : {},
     children: [
       {
