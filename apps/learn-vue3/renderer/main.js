@@ -7,10 +7,12 @@ import {
 } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { getSequence, normalizeClass } from "./shared";
+import { setCurrentInstance } from "./shared/currentInstance";
 
 const Text = Symbol();
 const Comment = Symbol();
 const Fragment = Symbol();
+
 // function renderer(domString, container) {
 //   container.innerHTML = domString;
 // }
@@ -264,7 +266,7 @@ function createRenderer(options) {
     const props = {};
     const attrs = {};
     for (const key in propsData) {
-      if (key in options || key.startsWith('on')) {
+      if (key in options || key.startsWith("on")) {
         props[key] = propsData[key];
       } else {
         attrs[key] = propsData[key];
@@ -293,27 +295,35 @@ function createRenderer(options) {
     const state = data ? reactive(data()) : null;
     const [props, attrs] = resolveProps(propsOption, vnode.props);
 
+    const slots = vnode.children || {};
     const instance = {
       state,
       isMounted: false,
       subTree: null,
       props: shallowReactive(props),
+      slots,
+      mounted: [], // 生命周期钩子
     };
 
     function emit(event, ...palyload) {
-      const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
-      const handler = instance.props[eventName]
+      const eventName = `on${event[0].toUpperCase() + event.slice(1)}`;
+      const handler = instance.props[eventName];
       if (handler) {
-        handler(...palyload)
-
+        handler(...palyload);
       } else {
-        console.error('时间处理函数不存在')
+        console.error("时间处理函数不存在");
       }
     }
-    
-    const setupContext = { attrs, emit };
+
+    const setupContext = { attrs, emit, slots };
+
+    // 为了在setup 中的 onMounted onUpdated 中获取到注册生命周期钩子。
+    // 这导致了 setup 不能是 async 的？
+    setCurrentInstance(instance);
     const setupResult =
       setup && setup(shallowReadonly(instance.props), setupContext);
+    setCurrentInstance(null);
+
     let setupState = null;
     if (typeof setupResult === "function") {
       if (render) console.error("setup 函数返回渲染函数，render 选项将被忽略");
@@ -327,6 +337,7 @@ function createRenderer(options) {
     const renderContext = new Proxy(instance, {
       get(t, k, r) {
         const { state, props } = t;
+        if (k === "slots") return slots;
         if (state && k in state) {
           return state[k];
         } else if (props && k in props) {
@@ -344,7 +355,7 @@ function createRenderer(options) {
         } else if (props && k in props) {
           return Reflect.set(props, k, v);
         } else if (setupState && k in setupState) {
-          return Reflect.set(setupState, k, v)
+          return Reflect.set(setupState, k, v);
         } else {
           console.error("不存在");
         }
@@ -354,12 +365,14 @@ function createRenderer(options) {
     created && created.call(renderContext);
     effect(
       () => {
-        const subTree = render.call(renderContext, renderContext);
+        const subTree = render.call(renderContext);
         if (!instance.isMounted) {
           beforeMount && beforeMount.call(renderContext);
           patch(null, subTree, container, anchor);
           instance.isMounted = true;
           mounted && mounted.call(renderContext);
+          instance.mounted &&
+            instance.forEach((hook) => hook.call(renderContext));
         } else {
           beforeUpdate && beforeUpdate.call(renderContext);
           patch(instance.subTree, subTree, container, anchor);
