@@ -24,46 +24,52 @@ export function normalizeClass(value) {
 }
 // [2,3,1,-1]
 
-export function getSequence(arr) {
-  const p = arr.slice();
+export function getSequence(nums) {
+  // https://juejin.cn/post/6937243374453784613
+  // 前驱节点，存放当前插入或新增项的前一项在 nums 中的索引
+  // 贪心确保了结果长度的准确
+  // 插入或新增的时候，永远比前一项的值大，保证了结果的准确
+  const prevIndex = nums.slice();
   const result = [0];
-  let i, j, u, v, c;
+  let i, last, start, end, middle;
 
-  const len = arr.length;
+  const len = nums.length;
   for (i = 0; i < len; i++) {
-    const arrI = arr[i];
-    if (arrI !== 0) {
-      j = result[result.length - 1];
-      if (arr[j] < arrI) {
-        p[i] = j;
+    const current = nums[i];
+    if (current !== 0) {
+      last = result[result.length - 1];
+      if (nums[last] < current) {
+        prevIndex[i] = last;
         result.push(i);
         continue;
       }
-      u = 0;
-      v = result.length - 1;
-      while (u < v) {
-        c = ((u + v) / 2) | 0;
-        if (arr[result[c]] < arrI) {
-          u = c + 1;
+      // 当前项小于最后一项，二分法查找
+      start = 0;
+      end = result.length - 1;
+      while (start < end) {
+        middle = ((start + end) / 2) | 0;
+        if (nums[result[middle]] < current) {
+          start = middle + 1;
         } else {
-          v = c;
+          end = middle;
         }
       }
-
-      if (arrI < arr[result[u]]) {
-        if (u > 0) {
-          p[i] = result[u - 1];
+      // 替换 result 中第一个比 current 大的项
+      if (current < nums[result[start]]) {
+        if (start > 0) {
+          prevIndex[i] = result[start - 1];
         }
-        result[u] = i;
+        result[start] = i;
       }
     }
   }
 
-  u = result.length;
-  v = result[u - 1];
-  while (u-- > 0) {
-    result[u] = v;
-    v = p[v];
+  let pivot = result.length;
+  let prev = result[pivot - 1];
+  while (pivot-- > 0) {
+    // 根据前驱节点一个个向前查找
+    result[pivot] = prev;
+    prev = prevIndex[result[pivot]];
   }
   return result;
 }
