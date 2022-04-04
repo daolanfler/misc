@@ -1,4 +1,5 @@
-import { effect, ref } from "@vue/reactivity";
+import { effect, reactive, ref, shallowReactive } from "@vue/reactivity";
+import { queueJob } from "./scheduler";
 import { getSequence, normalizeClass } from "./shared";
 
 const Text = Symbol();
@@ -214,9 +215,131 @@ function createRenderer(options) {
       }
     } else if (typeof type === "object") {
       // 组件
+      if (!n1) {
+        mountComponent(n2, container, anchor);
+      } else {
+        patchComponent(n1, n2, anchor);
+      }
     } else {
       // other type vnode
     }
+  }
+
+  function patchComponent(n1, n2, anchor) {
+    const instance = (n2.component = n1.component);
+    const { props } = instance;
+    if (hasPropsChanged(n1.props, n2.props)) {
+      const [nextProps] = resolveProps(n2.type.props, n2.props);
+
+      for (const k in nextProps) {
+        props[k] = nextProps[k];
+      }
+
+      for (const k in props) {
+        if (!(k in nextProps)) delete props[k];
+      }
+    }
+  }
+
+  function hasPropsChanged(prevProps, nextProps) {
+    const nextKeys = Object.keys(nextProps);
+    if (nextKeys.length !== Object.keys(prevProps)) {
+      return true;
+    }
+
+    for (let i = 0; i < nextKeys.length; i++) {
+      const key = nextKeys[i];
+      if (nextProps[key] !== prevProps[key]) return true;
+    }
+    return false;
+  }
+
+  function resolveProps(options, propsData) {
+    const props = {};
+    const attrs = {};
+    for (const key in propsData) {
+      if (key in options) {
+        props[key] = propsData[key];
+      } else {
+        attrs[key] = propsData[key];
+      }
+    }
+    return [props, attrs];
+  }
+
+  function mountComponent(vnode, container, anchor) {
+    const componentOptions = vnode.type;
+
+    const {
+      render,
+      data,
+      props: propsOption,
+      beforeCreate,
+      created,
+      beforeMount,
+      mounted,
+      beforeUpdate,
+      updated,
+    } = componentOptions;
+    beforeCreate && beforeCreate();
+
+    const state = reactive(data());
+    const [props, attrs] = resolveProps(propsOption, vnode.props);
+
+    const instance = {
+      state,
+      isMounted: false,
+      subTree: null,
+      props: shallowReactive(props),
+    };
+    vnode.component = instance;
+
+    const renderContext = new Proxy(instance, {
+      get(t, k, r) {
+        const { state, props } = t;
+        if (state && k in state) {
+          return state[k];
+        } else if (props && k in props) {
+          return props[k];
+        } else {
+          console.error("不存在");
+        }
+      },
+      set(t, k, v) {
+        const { sate, props } = t;
+        if (state && k in state) {
+          // state[k] = v;
+          return Reflect.set(state, k, v)
+        } else if (props && k in props) {
+          // props[k] = v;
+          return Reflect.set(props, k, v)
+        } else {
+          console.error("不存在");
+        }
+      },
+    });
+
+    created && created.call(renderContext);
+    effect(
+      () => {
+        const subTree = render.call(renderContext, renderContext);
+        if (!instance.isMounted) {
+          beforeMount && beforeMount.call(renderContext);
+          patch(null, subTree, container, anchor);
+          instance.isMounted = true;
+          mounted && mounted.call(renderContext);
+        } else {
+          beforeUpdate && beforeUpdate.call(renderContext);
+          patch(instance.subTree, subTree, container, anchor);
+          updated && updated.call(renderContext);
+        }
+        instance.subTree = subTree;
+        console.log(subTree);
+      },
+      {
+        scheduler: queueJob,
+      }
+    );
   }
 
   function mountElement(vnode, container, anchor) {
@@ -301,9 +424,11 @@ const renderer = createRenderer({
           // 时间处理函数被绑定的时间
           invoker.attached = performance.now();
           el.addEventListener(name, invoker);
-        } else if (invoker) {
-          el.removeEventListener(name, invoker);
+        } else {
+          invoker.value = nextValue;
         }
+      } else if (invoker) {
+        el.removeEventListener(name, invoker);
       }
     } else if (key === "class") {
       el.className = normalizeClass(nextValue) || "";
@@ -335,6 +460,29 @@ const vnode = {
   children: "Hello World How",
 };
 
+const MyComponent = {
+  name: "MyComponent",
+  data() {
+    return {
+      foo: "hello world",
+    };
+  },
+  props: {
+    bool: Boolean,
+  },
+  render() {
+    return {
+      type: "div",
+      children: `the value of foo is ${this.foo}, bool is ${this.bool.value}`,
+      props: {
+        onClick: () => {
+          this.foo = Math.random();
+        },
+      },
+    };
+  },
+};
+
 // const container = { type: "root" };
 
 // renderer.render(vnode, document.querySelector("#app"));
@@ -360,6 +508,12 @@ effect(() => {
           },
         },
         children: "text",
+      },
+      {
+        type: MyComponent,
+        props: {
+          bool: bol,
+        },
       },
     ],
   };

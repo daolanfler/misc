@@ -13,7 +13,6 @@ module.exports = {
     ecmaFeatures: { jsx: true },
     requireConfigFile: false,
   },
-  plugins: ['eslint-plugin-prettier'],
   rules: {
     indent: ["error", 2],
     "linebreak-style": ["error", "unix"],
