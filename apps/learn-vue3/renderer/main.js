@@ -1,4 +1,10 @@
-import { effect, reactive, ref, shallowReactive } from "@vue/reactivity";
+import {
+  effect,
+  reactive,
+  ref,
+  shallowReactive,
+  shallowReadonly,
+} from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { getSequence, normalizeClass } from "./shared";
 
@@ -258,7 +264,7 @@ function createRenderer(options) {
     const props = {};
     const attrs = {};
     for (const key in propsData) {
-      if (key in options) {
+      if (key in options || key.startsWith('on')) {
         props[key] = propsData[key];
       } else {
         attrs[key] = propsData[key];
@@ -270,9 +276,10 @@ function createRenderer(options) {
   function mountComponent(vnode, container, anchor) {
     const componentOptions = vnode.type;
 
-    const {
+    let {
       render,
       data,
+      setup,
       props: propsOption,
       beforeCreate,
       created,
@@ -283,7 +290,7 @@ function createRenderer(options) {
     } = componentOptions;
     beforeCreate && beforeCreate();
 
-    const state = reactive(data());
+    const state = data ? reactive(data()) : null;
     const [props, attrs] = resolveProps(propsOption, vnode.props);
 
     const instance = {
@@ -292,6 +299,29 @@ function createRenderer(options) {
       subTree: null,
       props: shallowReactive(props),
     };
+
+    function emit(event, ...palyload) {
+      const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
+      const handler = instance.props[eventName]
+      if (handler) {
+        handler(...palyload)
+
+      } else {
+        console.error('时间处理函数不存在')
+      }
+    }
+    
+    const setupContext = { attrs, emit };
+    const setupResult =
+      setup && setup(shallowReadonly(instance.props), setupContext);
+    let setupState = null;
+    if (typeof setupResult === "function") {
+      if (render) console.error("setup 函数返回渲染函数，render 选项将被忽略");
+      render = setupResult;
+    } else if (setupResult) {
+      setupState = setupResult;
+    }
+
     vnode.component = instance;
 
     const renderContext = new Proxy(instance, {
@@ -301,18 +331,20 @@ function createRenderer(options) {
           return state[k];
         } else if (props && k in props) {
           return props[k];
+        } else if (setupState && k in setupState) {
+          return setupState[k];
         } else {
           console.error("不存在");
         }
       },
       set(t, k, v) {
-        const { sate, props } = t;
+        const { state, props } = t;
         if (state && k in state) {
-          // state[k] = v;
-          return Reflect.set(state, k, v)
+          return Reflect.set(state, k, v);
         } else if (props && k in props) {
-          // props[k] = v;
-          return Reflect.set(props, k, v)
+          return Reflect.set(props, k, v);
+        } else if (setupState && k in setupState) {
+          return Reflect.set(setupState, k, v)
         } else {
           console.error("不存在");
         }
@@ -494,10 +526,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-          onClick: () => {
-            alert("父元素 clicked");
-          },
-        }
+        onClick: () => {
+          alert("父元素 clicked");
+        },
+      }
       : {},
     children: [
       {
