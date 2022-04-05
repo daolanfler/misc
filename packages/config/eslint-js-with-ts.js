@@ -14,7 +14,7 @@ module.exports = {
     requireConfigFile: false,
   },
   rules: {
-    indent: ["error", 2],
+    indent: ["error", 2, { SwitchCase: 1 }],
     "linebreak-style": ["error", "unix"],
     "no-unused-vars": 1,
     // semi: ["error", "always"],
