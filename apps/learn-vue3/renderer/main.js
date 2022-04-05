@@ -7,7 +7,7 @@ import {
 } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { getSequence, normalizeClass } from "./shared";
-import { setCurrentInstance } from "./shared/lifecycle";
+import { currentInstace, setCurrentInstance } from "./shared/lifecycle";
 
 export const Text = Symbol();
 const Comment = Symbol();
@@ -224,7 +224,11 @@ function createRenderer(options) {
     } else if (typeof type === "object" || typeof type === "function") {
       // 组件
       if (!n1) {
-        mountComponent(n2, container, anchor);
+        if (n2.keptAlive) {
+          n2.keepAliveInstance._activate(n2, container, anchor);
+        } else {
+          mountComponent(n2, container, anchor);
+        }
       } else {
         patchComponent(n1, n2, anchor);
       }
@@ -310,8 +314,18 @@ function createRenderer(options) {
       props: shallowReactive(props),
       slots,
       mounted: [], // 生命周期钩子
+      keepAliveCtx: null,
     };
 
+    const isKeepAlive = vnode.type.__isKeepAlive;
+    if (isKeepAlive) {
+      instance.keepAliveCtx = {
+        move(vnode, container, anchor) {
+          insert(vnode.component.subTree.el, container, anchor);
+        },
+        createElement,
+      };
+    }
     function emit(event, ...palyload) {
       const eventName = `on${event[0].toUpperCase() + event.slice(1)}`;
       const handler = instance.props[eventName];
@@ -420,7 +434,11 @@ function createRenderer(options) {
       return;
     } else if (typeof vnode.type === "object") {
       // 组件的卸载
-      unmount(vnode.component.subTree);
+      if (vnode.shouldKeepAlive) {
+        vnode.keepAliveInstance._deActivate(vnode);
+      } else {
+        unmount(vnode.component.subTree);
+      }
       return;
     }
     const parent = vnode.el.parentNode;
@@ -504,6 +522,63 @@ const renderer = createRenderer({
 function shouldSetAsProps(el, key, nextValue) {
   return key in el;
 }
+
+const KeepAlive = {
+  __isKeepAlive: true,
+  props: {
+    include: RegExp,
+    exclude: RegExp,
+  },
+  setup(props, { slots }) {
+    // 创建一个缓存对象
+    // key: vnode.type
+    // value: vnode
+    const cache = new Map();
+    // 当前的 KeepAlive 组件实例
+    const instance = currentInstace;
+
+    const { move, createElement } = instance.keepAliveCtx;
+
+    const storageContainer = createElement("div");
+
+    instance._deActivate = (vnode) => {
+      move(vnode, storageContainer);
+    };
+
+    instance._activate = (vnode, container, anchor) => {
+      move(vnode, container, anchor);
+    };
+
+    return () => {
+      let rawVNode = slots.default();
+      if (typeof rawVNode.type !== "object") {
+        return rawVNode;
+      }
+
+      const name = rawVNode.type.name;
+      if (
+        name &&
+        ((props.include && !props.include.test(name)) ||
+          (props.exclude && props.exclude.test(name)))
+      ) {
+        return rawVNode;
+      }
+
+      const cachedVNode = cache.get(rawVNode.type);
+      if (cachedVNode) {
+        // component 就是 instance
+        rawVNode.component = cachedVNode.component;
+        rawVNode.keptAlive = true;
+      } else {
+        cache.set(rawVNode.type, rawVNode);
+      }
+
+      rawVNode.shouldKeepAlive = true;
+      rawVNode.keepAliveInstance = instance;
+      return rawVNode;
+    };
+  },
+};
 
 const vnode = {
   type: "h1",
