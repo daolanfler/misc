@@ -221,6 +221,20 @@ function createRenderer(options) {
       } else {
         patchChildren(n1, n2, container);
       }
+    } else if (typeof type === "object" && type.__isTeleport) {
+      // Teleport 组件内部实现的  process 方法
+      type.process(n1, n2, container, anchor, {
+        patch,
+        patchChildren,
+        unmount,
+        move(vnode, container, anchor) {
+          insert(
+            vnode.component ? vnode.component.subTree.el : vnode.el,
+            container,
+            anchor
+          );
+        },
+      });
     } else if (typeof type === "object" || typeof type === "function") {
       // 组件
       if (!n1) {
@@ -580,6 +594,30 @@ const KeepAlive = {
   },
 };
 
+const Teleport = {
+  __isTeleport: true,
+  process(n1, n2, container, anchor, internals) {
+    const { patch, patchChildren, move } = internals;
+
+    if (!n1) {
+      const target =
+        typeof n2.props.to === "string"
+          ? document.querySelector(n2.props.to)
+          : n2.props.to;
+      n2.children.forEach((c) => patch(null, c, target, anchor));
+    } else {
+      patchChildren(n1, n2, container);
+      if (n2.props.to !== n1.props.to) {
+        const newTarget =
+          typeof n2.props.to === "string"
+            ? document.querySelector(n2.props.to)
+            : n2.props.to;
+        n2.children.forEach((c) => move(c, newTarget));
+      }
+    }
+  },
+};
+
 const vnode = {
   type: "h1",
   props: {
@@ -625,10 +663,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-          onClick: () => {
-            alert("父元素 clicked");
-          },
-        }
+        onClick: () => {
+          alert("父元素 clicked");
+        },
+      }
       : {},
     children: [
       {
