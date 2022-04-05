@@ -73,3 +73,9 @@ export function getSequence(nums) {
   }
   return result;
 }
+
+export function nextFrame(cb) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(cb);
+  });
+}

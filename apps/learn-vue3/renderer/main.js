@@ -6,7 +6,7 @@ import {
   shallowReadonly,
 } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
-import { getSequence, normalizeClass } from "./shared";
+import { getSequence, nextFrame, normalizeClass } from "./shared";
 import { currentInstace, setCurrentInstance } from "./shared/lifecycle";
 
 export const Text = Symbol();
@@ -438,11 +438,19 @@ function createRenderer(options) {
         patchProps(el, key, null, vnode.props[key]);
       }
     }
+    const needTransition = vnode.transition;
+    if (needTransition) {
+      vnode.transition.beforeEnter(el);
+    }
 
     insert(el, container, anchor);
+    if (needTransition) {
+      vnode.transition.enter(el);
+    }
   }
 
   function unmount(vnode) {
+    const needTransition = vnode.transition;
     if (vnode.type === Fragment) {
       vnode.children.forEach((c) => unmount(c));
       return;
@@ -457,7 +465,12 @@ function createRenderer(options) {
     }
     const parent = vnode.el.parentNode;
     if (parent) {
-      parent.removeChild(vnode.el);
+      const performRemove = () => parent.removeChild(vnode.el);
+      if (needTransition) {
+        vnode.transition.leave(vnode.el, performRemove);
+      } else {
+        performRemove();
+      }
     }
   }
 
@@ -618,6 +631,47 @@ const Teleport = {
   },
 };
 
+const Transition = {
+  name: "Transition",
+  setup(props, { slots }) {
+    return () => {
+      const innerVNode = slots.default();
+
+      innerVNode.transition = {
+        beforeEnter(el) {
+          el.classList.add("enter-from");
+          el.classList.add("enter-active");
+        },
+        enter(el) {
+          nextFrame(() => {
+            el.classList.remove("enter-form");
+            el.classList.add("enter-to");
+            el.addEventListener("transitionend", () => {
+              el.classList.remove("enter-to");
+              el.classList.remove("enter-active");
+            });
+          });
+        },
+        leave(el, performRemove) {
+          el.classList.add("leave-from");
+          el.classList.add("leave-active");
+          document.body.offsetHeight;
+          nextFrame(() => {
+            el.classList.remove("leave-from");
+            el.classList.add("leave-to");
+            el.addEventListener("transitionend", () => {
+              el.classList.remove("leave-to");
+              el.classList.remove("leave-active");
+              performRemove();
+            });
+          });
+        },
+      };
+      return innerVNode;
+    };
+  },
+};
+
 const vnode = {
   type: "h1",
   props: {
@@ -663,10 +717,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-        onClick: () => {
-          alert("父元素 clicked");
-        },
-      }
+          onClick: () => {
+            alert("父元素 clicked");
+          },
+        }
       : {},
     children: [
       {
