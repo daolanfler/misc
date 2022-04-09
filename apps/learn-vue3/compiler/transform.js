@@ -78,7 +78,7 @@ function transformElement(node) {
     if (node.type !== "Element") return 
 
     const callExp = createCallExpression('h', [createStringLiteral(node.tag)])
-    node.children === 1 ? 
+    node.children.length === 1 ? 
       callExp.arguments.push(node.children[0].jsNode)
       : callExp.arguments.push(createArrayExpression(node.children.map(c => c.jsNode)))
     node.jsNode = callExp
@@ -129,5 +129,5 @@ export function transform(ast) {
     nodeTransforms: [transformElement, transformText, transformRootNode],
   };
   traverseNode(ast, context);
-  return ast
+  return ast.jsNode
 }
