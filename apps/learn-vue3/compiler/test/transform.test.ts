@@ -8,83 +8,9 @@ it('shourd transform to javascript ast', () => {
   const ast = parse(template)
   expect(transform(ast)).toMatchInlineSnapshot(`
     {
-      "children": [
+      "body": [
         {
-          "children": [
-            {
-              "children": [
-                {
-                  "content": "Vue",
-                  "jsNode": {
-                    "type": "StringLiteral",
-                    "value": "Vue",
-                  },
-                  "type": "Text",
-                },
-              ],
-              "jsNode": {
-                "arguments": [
-                  {
-                    "type": "StringLiteral",
-                    "value": "p",
-                  },
-                  {
-                    "elements": [
-                      {
-                        "type": "StringLiteral",
-                        "value": "Vue",
-                      },
-                    ],
-                    "type": "ArrayExpression",
-                  },
-                ],
-                "callee": {
-                  "name": "h",
-                  "type": "Identifier",
-                },
-                "type": "CallExpression",
-              },
-              "tag": "p",
-              "type": "Element",
-            },
-            {
-              "children": [
-                {
-                  "content": "Template",
-                  "jsNode": {
-                    "type": "StringLiteral",
-                    "value": "Template",
-                  },
-                  "type": "Text",
-                },
-              ],
-              "jsNode": {
-                "arguments": [
-                  {
-                    "type": "StringLiteral",
-                    "value": "p",
-                  },
-                  {
-                    "elements": [
-                      {
-                        "type": "StringLiteral",
-                        "value": "Template",
-                      },
-                    ],
-                    "type": "ArrayExpression",
-                  },
-                ],
-                "callee": {
-                  "name": "h",
-                  "type": "Identifier",
-                },
-                "type": "CallExpression",
-              },
-              "tag": "p",
-              "type": "Element",
-            },
-          ],
-          "jsNode": {
+          "return": {
             "arguments": [
               {
                 "type": "StringLiteral",
@@ -99,13 +25,8 @@ it('shourd transform to javascript ast', () => {
                         "value": "p",
                       },
                       {
-                        "elements": [
-                          {
-                            "type": "StringLiteral",
-                            "value": "Vue",
-                          },
-                        ],
-                        "type": "ArrayExpression",
+                        "type": "StringLiteral",
+                        "value": "Vue",
                       },
                     ],
                     "callee": {
@@ -121,13 +42,8 @@ it('shourd transform to javascript ast', () => {
                         "value": "p",
                       },
                       {
-                        "elements": [
-                          {
-                            "type": "StringLiteral",
-                            "value": "Template",
-                          },
-                        ],
-                        "type": "ArrayExpression",
+                        "type": "StringLiteral",
+                        "value": "Template",
                       },
                     ],
                     "callee": {
@@ -146,86 +62,15 @@ it('shourd transform to javascript ast', () => {
             },
             "type": "CallExpression",
           },
-          "tag": "div",
-          "type": "Element",
+          "type": "ReturnStatement",
         },
       ],
-      "jsNode": {
-        "body": [
-          {
-            "return": {
-              "arguments": [
-                {
-                  "type": "StringLiteral",
-                  "value": "div",
-                },
-                {
-                  "elements": [
-                    {
-                      "arguments": [
-                        {
-                          "type": "StringLiteral",
-                          "value": "p",
-                        },
-                        {
-                          "elements": [
-                            {
-                              "type": "StringLiteral",
-                              "value": "Vue",
-                            },
-                          ],
-                          "type": "ArrayExpression",
-                        },
-                      ],
-                      "callee": {
-                        "name": "h",
-                        "type": "Identifier",
-                      },
-                      "type": "CallExpression",
-                    },
-                    {
-                      "arguments": [
-                        {
-                          "type": "StringLiteral",
-                          "value": "p",
-                        },
-                        {
-                          "elements": [
-                            {
-                              "type": "StringLiteral",
-                              "value": "Template",
-                            },
-                          ],
-                          "type": "ArrayExpression",
-                        },
-                      ],
-                      "callee": {
-                        "name": "h",
-                        "type": "Identifier",
-                      },
-                      "type": "CallExpression",
-                    },
-                  ],
-                  "type": "ArrayExpression",
-                },
-              ],
-              "callee": {
-                "name": "h",
-                "type": "Identifier",
-              },
-              "type": "CallExpression",
-            },
-            "type": "ReturnStatement",
-          },
-        ],
-        "id": {
-          "name": "render",
-          "type": "Identifier",
-        },
-        "params": [],
-        "type": "FunctionDecl",
+      "id": {
+        "name": "render",
+        "type": "Identifier",
       },
-      "type": "Root",
+      "params": [],
+      "type": "FunctionDecl",
     }
   `);
 });
