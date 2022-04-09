@@ -99,9 +99,6 @@ export function tokenize(str) {
   return tokens;
 }
 
-const tokens = tokenize("<div><p>Vue</p><p>Template</p></div>");
-console.log(tokens);
-
 export function parse(str) {
   const tokens = tokenize(str);
 
@@ -148,6 +145,4 @@ const ast = parse("<div><p>Vue</p><p>Template</p></div>");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-writeFile(`${__dirname}/ast.json`, JSON.stringify(ast, null, 2), (err) => {
-  console.log(err);
-});
+writeFile(`${__dirname}/ast.json`, JSON.stringify(ast, null, 2), (err) => {});
