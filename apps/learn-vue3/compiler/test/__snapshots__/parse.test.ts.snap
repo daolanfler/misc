@@ -1,0 +1,72 @@
+// Vitest Snapshot v1
+
+exports[`should parse to a template ast tree 1`] = `
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "content": "Vue",
+              "type": "Text",
+            },
+          ],
+          "tag": "p",
+          "type": "Element",
+        },
+        {
+          "children": [
+            {
+              "content": "Template",
+              "type": "Text",
+            },
+          ],
+          "tag": "p",
+          "type": "Element",
+        },
+      ],
+      "tag": "div",
+      "type": "Element",
+    },
+  ],
+  "type": "Root",
+}
+`;
+
+exports[`tokenize works correctly 1`] = `
+[
+  {
+    "name": "div",
+    "type": "tag",
+  },
+  {
+    "name": "p",
+    "type": "tag",
+  },
+  {
+    "content": "Vue",
+    "type": "text",
+  },
+  {
+    "name": "char",
+    "type": "tagEnd",
+  },
+  {
+    "name": "p",
+    "type": "tag",
+  },
+  {
+    "content": "Template",
+    "type": "text",
+  },
+  {
+    "name": "char",
+    "type": "tagEnd",
+  },
+  {
+    "name": "char,i,v",
+    "type": "tagEnd",
+  },
+]
+`;
