@@ -15,7 +15,7 @@ function isAlpha(char) {
   return (char >= "a" && char <= "z") || (char >= "A" && char <= "Z");
 }
 
-function tokenize(str) {
+export function tokenize(str) {
   let currentState = State.initial;
 
   const chars = [];
@@ -102,7 +102,7 @@ function tokenize(str) {
 const tokens = tokenize("<div><p>Vue</p><p>Template</p></div>");
 console.log(tokens);
 
-function parse(str) {
+export function parse(str) {
   const tokens = tokenize(str);
 
   const root = {
