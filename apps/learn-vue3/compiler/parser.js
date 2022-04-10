@@ -63,9 +63,9 @@ export function parse(str) {
 function parseChildren(context, ancestors) {
   let nodes = [];
 
-  const { mode, source } = context;
 
   while (!isEnd(context, ancestors)) {
+    const { mode, source } = context;
     let node;
     if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
       // DATA 模式才支持标签节点解析
@@ -202,7 +202,21 @@ function parseAttributes(context) {
   return props;
 }
 
-function parseComment() {}
+function parseComment(context) { 
+  context.advanceBy('<!--'.length)
+
+  const closeIndex = context.source.indexOf('-->')
+
+  const content = context.source.slice(0, closeIndex)
+
+  context.advanceBy(content.length)
+  context.advanceBy('-->'.length)
+
+  return {
+    type: 'Comment',
+    content
+  }
+}
 
 function parseText(context) {
   let endIndex = context.source.length;

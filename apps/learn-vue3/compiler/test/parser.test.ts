@@ -9,14 +9,31 @@ it('should parse attributes', () => {
 });
 
 it('should parse v-on attributes', () => { 
-
   const template = '<div id="foo" v-show="display" v-on:mouseover="onMouseOver"></div>'
- 
+
   expect(parse(template)).toMatchSnapshot()
 })
 
 it('should parse Text', () => {
-  expect(parse('<div>Text {{ console.log("random")}}</div>')).toMatchSnapshot();
+  expect(parse('<div>Text</div>')).toMatchInlineSnapshot(`
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "content": "Text",
+              "type": "Text",
+            },
+          ],
+          "isSelfClosing": false,
+          "props": [],
+          "tag": "div",
+          "type": "Element",
+        },
+      ],
+      "type": "Root",
+    }
+  `);
 })
 
 it('should parse Text with HTML entities', () => {
@@ -83,4 +100,68 @@ describe('decodeHtml', () => {
       ),
     ).toBe('<strong><strong>&</strong></strong>')
   })
+})
+
+it('should parse Interpolation Correctly', () => {
+  expect(parse('<div>Text <span>label: {{label}}</span></div>')).toMatchInlineSnapshot(`
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "content": "Text ",
+              "type": "Text",
+            },
+            {
+              "children": [
+                {
+                  "content": "label: ",
+                  "type": "Text",
+                },
+                {
+                  "content": {
+                    "content": "label",
+                    "type": "Expression",
+                  },
+                  "type": "Interpolation",
+                },
+              ],
+              "isSelfClosing": false,
+              "props": [],
+              "tag": "span",
+              "type": "Element",
+            },
+          ],
+          "isSelfClosing": false,
+          "props": [],
+          "tag": "div",
+          "type": "Element",
+        },
+      ],
+      "type": "Root",
+    }
+  `);
+})
+
+it('should parse comment', () => {
+  const template = '<div><!-- comments --></div>'
+  expect(parse(template)).toMatchInlineSnapshot(`
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "content": " comments ",
+              "type": "Comment",
+            },
+          ],
+          "isSelfClosing": false,
+          "props": [],
+          "tag": "div",
+          "type": "Element",
+        },
+      ],
+      "type": "Root",
+    }
+  `)
 })
