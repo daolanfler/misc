@@ -1,0 +1,78 @@
+// Vitest Snapshot v1
+
+exports[`should parse Text 1`] = `
+{
+  "children": [
+    {
+      "children": [
+        {
+          "content": "Text",
+          "type": "Text",
+        },
+      ],
+      "isSelfClosing": false,
+      "props": [],
+      "tag": "div",
+      "type": "Element",
+    },
+  ],
+  "type": "Root",
+}
+`;
+
+exports[`should parse attributes 1`] = `
+{
+  "children": [
+    {
+      "children": [],
+      "isSelfClosing": false,
+      "props": [
+        {
+          "name": "id",
+          "type": "Attribute",
+          "value": "foo",
+        },
+        {
+          "name": "v-show",
+          "type": "Attribute",
+          "value": "display",
+        },
+      ],
+      "tag": "div",
+      "type": "Element",
+    },
+  ],
+  "type": "Root",
+}
+`;
+
+exports[`should parse v-on attributes 1`] = `
+{
+  "children": [
+    {
+      "children": [],
+      "isSelfClosing": false,
+      "props": [
+        {
+          "name": "id",
+          "type": "Attribute",
+          "value": "foo",
+        },
+        {
+          "name": "v-show",
+          "type": "Attribute",
+          "value": "display",
+        },
+        {
+          "name": "v-on:mouseover",
+          "type": "Attribute",
+          "value": "onMouseOver",
+        },
+      ],
+      "tag": "div",
+      "type": "Element",
+    },
+  ],
+  "type": "Root",
+}
+`;

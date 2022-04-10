@@ -1,8 +1,40 @@
+import namedCharacterReferences from "./named-chars.json";
+
 const TextModes = {
   DATA: "DATA",
   RCDATA: "RADATA",
   RAWTEXT: "RAWTEXT",
   CDATA: "CDATA",
+};
+
+const CCR_REPLACEMENTS = {
+  0x80: 0x20ac,
+  0x82: 0x201a,
+  0x83: 0x0192,
+  0x84: 0x201e,
+  0x85: 0x2026,
+  0x86: 0x2020,
+  0x87: 0x2021,
+  0x88: 0x02c6,
+  0x89: 0x2030,
+  0x8a: 0x0160,
+  0x8b: 0x2039,
+  0x8c: 0x0152,
+  0x8e: 0x017d,
+  0x91: 0x2018,
+  0x92: 0x2019,
+  0x93: 0x201c,
+  0x94: 0x201d,
+  0x95: 0x2022,
+  0x96: 0x2013,
+  0x97: 0x2014,
+  0x98: 0x02dc,
+  0x99: 0x2122,
+  0x9a: 0x0161,
+  0x9b: 0x203a,
+  0x9c: 0x0153,
+  0x9e: 0x017e,
+  0x9f: 0x0178,
 };
 
 export function parse(str) {
@@ -155,29 +187,165 @@ function parseAttributes(context) {
         console.error("缺少引号");
       }
     } else {
-      const match = /^[^\t\r\n\f >]+/.exec(context.source)
-      value = match[0]
-      advanceBy(value.length)
+      const match = /^[^\t\r\n\f >]+/.exec(context.source);
+      value = match[0];
+      advanceBy(value.length);
     }
     advanceSpaces();
 
     props.push({
-      type: 'Attribute',
+      type: "Attribute",
       name,
-      value
-    })
+      value,
+    });
   }
-  return props
+  return props;
 }
 
-function parseComment() {
+function parseComment() {}
 
+function parseText(context) {
+  let endIndex = context.source.length;
+  const ltIndex = context.source.indexOf("<");
+  const delimiterIndex = context.source.indexOf("{{");
+
+  if (ltIndex > -1 && ltIndex < endIndex) {
+    endIndex = ltIndex;
+  }
+
+  if (delimiterIndex > -1 && delimiterIndex < endIndex) {
+    endIndex = delimiterIndex;
+  }
+
+  const content = context.source.slice(0, endIndex);
+
+  context.advanceBy(content.length);
+  return {
+    type: "Text",
+    content: decodeHtml(content),
+  };
 }
 
-function parseText() {
+function parseInterpolation(context) {
+  context.advanceBy("{{".length);
 
+  const closeIndex = context.source.indexOf("}}");
+
+  if (closeIndex < 0) {
+    console.error("插值缺少结束定界符");
+  }
+
+  const content = context.source.slice(0, closeIndex);
+  context.advanceBy(content.length)
+  context.advanceBy("}}".length);
+
+  return {
+    type: "Interpolation",
+    content: {
+      type: "Expression",
+      content: decodeHtml(content),
+    },
+  };
 }
 
-function parseInterpolation() {
+export function decodeHtml(rawText, asAttr = false) {
+  let offset = 0;
+  const end = rawText.length;
 
+  let decodedText = "";
+
+  let maxCRNameLength = 0;
+
+  function advance(length) {
+    offset += length;
+    rawText = rawText.slice(length);
+  }
+
+  while (offset < end) {
+    const head = /&(?:#x?)?/i.exec(rawText);
+    if (!head) {
+      const remaining = end - offset;
+      decodedText += rawText.slice(0, remaining);
+
+      advance(remaining);
+      break;
+    }
+
+    decodedText += rawText.slice(0, head.index);
+    advance(head.index);
+
+    if (head[0] === "&") {
+      let name = "";
+      let value;
+
+      if (/[0-9a-z]/i.test(rawText[1])) {
+        if (!maxCRNameLength) {
+          maxCRNameLength = Object.keys(namedCharacterReferences).reduce(
+            (max, name) => Math.max(max, name.length),
+            0
+          );
+        }
+
+        for (let length = maxCRNameLength; !value && length > 0; --length) {
+          name = rawText.substr(1, length);
+          value = namedCharacterReferences[name];
+        }
+
+        if (value) {
+          const semi = name.endsWith(";");
+          if (
+            asAttr &&
+            !semi &&
+            /[=a-z0-9]/i.test(rawText[name.length + 1] || "")
+          ) {
+            decodedText += "&" + name;
+            advance(1 + name.length);
+          } else {
+            decodedText += value;
+            advance(1 + name.length);
+          }
+        } else {
+          decodedText += "&" + name;
+          advance(1 + name.length);
+        }
+      } else {
+        decodedText += "&";
+        advance(1);
+      }
+    } else {
+      const hex = head[0] === "&#x";
+
+      const pattern = hex ? /^&#x([0-9a-f]+);?/i : /^&#([0-9]+);?/;
+
+      const body = pattern.exec(rawText);
+
+      if (body) {
+        // code point
+        let cp = Number.parseInt(body[1], hex ? 16 : 10);
+
+        if (cp === 0) {
+          cp = 0xfffd;
+        } else if (cp > 0x10ffff) {
+          cp = 0xfffd;
+        } else if (cp > 0xd800 && cp <= 0xdfff) {
+          cp = 0xfffd;
+        } else if ((cp >= 0xfdd0 && cp <= 0xfdef) || (cp & 0xfffe) === 0xfffe) {
+          // 如果码点处于 nocharacter 范围内，则什么都不做，交给平台处理
+        } else if (
+          (cp >= 0x01 && cp <= 0x08) ||
+          cp === 0x0b ||
+          (cp >= 0x0d && cp <= 0x1f) ||
+          (cp >= 0x7f && cp <= 0x9f)
+        ) {
+          cp = CCR_REPLACEMENTS[cp] || cp;
+        }
+        decodedText += String.fromCodePoint(cp);
+        advance(body[0].length);
+      } else {
+        decodedText += head[0];
+        advance(head[0].length);
+      }
+    }
+  }
+  return decodedText;
 }
