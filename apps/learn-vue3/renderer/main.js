@@ -407,7 +407,7 @@ function createRenderer(options) {
           instance.isMounted = true;
           mounted && mounted.call(renderContext);
           instance.mounted &&
-            instance.forEach((hook) => hook.call(renderContext));
+            instance.mounted.forEach((hook) => hook.call(renderContext));
         } else {
           beforeUpdate && beforeUpdate.call(renderContext);
           patch(instance.subTree, subTree, container, anchor);
@@ -717,10 +717,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-          onClick: () => {
-            alert("父元素 clicked");
-          },
-        }
+        onClick: () => {
+          alert("父元素 clicked");
+        },
+      }
       : {},
     children: [
       {
