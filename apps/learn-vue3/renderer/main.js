@@ -152,19 +152,37 @@ function createRenderer(options) {
     const oldProps = n1.props;
     const newProps = n2.props;
 
-    for (const key in newProps) {
-      if (newProps[key] !== oldProps[key]) {
-        patchProps(el, key, oldProps[key], newProps[key]);
+    if (n2.patchFlags) {
+      if (n2.patchFlags === 1) {
+        // 只需更新 class
+      } else if (n2.patchFlags === 2) {
+        // 只需更新 style 
+      } // else if xxxx
+    } else {
+      for (const key in newProps) {
+        if (newProps[key] !== oldProps[key]) {
+          patchProps(el, key, oldProps[key], newProps[key]);
+        }
+      }
+
+      for (const key in oldProps) {
+        if (!(key in newProps)) {
+          patchProps(el, key, oldProps[key], null);
+        }
       }
     }
 
-    for (const key in oldProps) {
-      if (!(key in newProps)) {
-        patchProps(el, key, oldProps[key], null);
-      }
+    if (n2.dynamicChildren) {
+      patchBlockChildren(n1, n2);
+    } else {
+      patchChildren(n1, n2, el);
     }
+  }
 
-    patchChildren(n1, n2, el);
+  function patchBlockChildren(n1, n2) {
+    for (let i = 0; i < n2.dynamicChildren.length; i++) {
+      patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i]);
+    }
   }
 
   function patchChildren(n1, n2, container) {
@@ -217,7 +235,7 @@ function createRenderer(options) {
       }
     } else if (type === Fragment) {
       if (!n1) {
-        n2.children.forEAch((c) => patch(null, c, container));
+        n2.children.forEach((c) => patch(null, c, container));
       } else {
         patchChildren(n1, n2, container);
       }
@@ -488,6 +506,7 @@ function createRenderer(options) {
   return { render };
 }
 
+// web 平台的
 const renderer = createRenderer({
   createElement(tag) {
     return document.createElement(tag);
@@ -717,10 +736,10 @@ effect(() => {
     type: "div",
     props: bol.value
       ? {
-        onClick: () => {
-          alert("父元素 clicked");
-        },
-      }
+          onClick: () => {
+            alert("父元素 clicked");
+          },
+        }
       : {},
     children: [
       {
