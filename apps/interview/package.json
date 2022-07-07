@@ -18,14 +18,19 @@
   },
   "homepage": "https://github.com/daolanfler/codelab#readme",
   "devDependencies": {
-    "tsconfig": "workspace:*",
     "@babel/core": "^7.17.8",
     "@babel/eslint-parser": "^7.17.0",
     "@tsconfig/node16": "^1.0.2",
+    "@type-challenges/utils": "^0.1.1",
     "@typescript-eslint/eslint-plugin": "^5.3.0",
     "@typescript-eslint/parser": "^5.3.0",
-    "@type-challenges/utils": "^0.1.1",
-    "eslint": "^8.11.0",
+    "eslint": "^8.19.0",
+    "ts-node": "^10.8.2",
+    "tsconfig": "workspace:*",
     "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "open": "^8.4.0",
+    "readline-sync": "^1.4.10"
   }
 }

@@ -3,6 +3,7 @@ declare const NsType: unique symbol;
 class Ns {
   readonly value: number;
 
+  // corresponding tsconfig: strictPropertyInitialization 
   [NsType]: void;
 
   constructor(value: number) {
@@ -10,6 +11,7 @@ class Ns {
   }
 }
 
+// 由于 TypeScript 是 structral type system，`unique symbole`是用来模拟 nominal type system 的
 declare const LbfsType: unique symbol;
 
 class Lbfs {
