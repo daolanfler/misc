@@ -8,7 +8,7 @@ export class BinaryTreeNode<T> {
   }
 }
 
-class LinkedListNode<T> implements Iterable<T> {
+export class LinkedListNode<T> implements Iterable<T> {
   value: T;
   next: LinkedListNode<T>;
 

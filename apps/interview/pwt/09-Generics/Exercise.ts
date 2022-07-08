@@ -86,7 +86,7 @@ function* iterateArr<T>(arr: T[]): IterableIterator<T> {
   }
 }
 
-function* getRandomNumber() {
+export function* getRandomNumber() {
   while(true) {
     yield Math.random();
   }
