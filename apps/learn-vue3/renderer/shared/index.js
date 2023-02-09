@@ -24,6 +24,7 @@ export function normalizeClass(value) {
 }
 // [2,3,1,-1]
 
+// 最长递增子序列
 export function getSequence(nums) {
   // https://juejin.cn/post/6937243374453784613
   // 前驱节点，存放当前插入或新增项的前一项在 nums 中的索引
