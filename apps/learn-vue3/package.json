@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "dev": "vite --port 3001"
   },
   "author": "daolanfler",
@@ -13,10 +13,10 @@
   "devDependencies": {
     "config": "workspace:*",
     "tsconfig": "workspace:*",
-    "vitest": "^0.25.1"
+    "vitest": "^0.29.2"
   },
   "dependencies": {
-    "@vue/reactivity": "^3.2.31",
-    "vite": "^2.8.6"
+    "@vue/reactivity": "^3.2.47",
+    "vite": "^4.1.4"
   }
 }
