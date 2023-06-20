@@ -9,6 +9,8 @@ class Promise {
       if (this.state === 'pending') {
         this.state = 'fulfilled';
         this.value = value;
+        // if resolve happend after then calls, make sure when resolve, invoke
+        // those callbacks (asynchronously as those cbs are wrapped)
         this.onResolvedCallbacks.forEach(fn => fn());
       }
     };
@@ -84,6 +86,14 @@ class Promise {
     return this.then(null, fn);
   }
 }
+/**
+ * 对 then 回调中不同类型的返回值的处理 thenable / another promise / value
+ * @param {*} promise2 当前 promise
+ * @param {*} x onFullfilled or onRejected 返回值 
+ * @param {*} resolve 
+ * @param {*} reject 
+ * @returns void
+ */
 function resolvePromise(promise2, x, resolve, reject) {
   if (x === promise2) {
     return reject(new TypeError('Chaining cycle detected for promise'));
@@ -185,7 +195,23 @@ Promise.defer = Promise.deferred = function () {
   });
   return dfd;
 };
+
 module.exports = Promise;
 
 // run below to test
 // npx promises-aplus-tests index.js
+
+
+/**
+ *  A typical example
+let promise = Promise.resolve(1)
+
+let promiseA = Promise.resolve('A')
+
+let promiseB = promise.then(() => promiseA)
+// promise created and fullfilled
+// the last line: `promise`'s first then callback, a `promise2` is created 
+// which is just promiseB
+// promiseA --> then 'A' in the then callback promiseB is resolved
+
+ */
