@@ -1,21 +1,22 @@
 {
-  "name": "codelab",
+  "name": "misc",
   "version": "1.0.0",
   "description": "js interview questions ",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint . --ext .js,.ts --fix"
+    "lint": "eslint . --ext .js,.ts --fix",
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/daolanfler/codelab.git"
+    "url": "git+https://github.com/daolanfler/misc.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/daolanfler/codelab/issues"
+    "url": "https://github.com/daolanfler/misc/issues"
   },
-  "homepage": "https://github.com/daolanfler/codelab#readme",
+  "homepage": "https://github.com/daolanfler/misc#readme",
   "devDependencies": {
     "@babel/core": "^7.22.5",
     "@babel/eslint-parser": "^7.22.5",
@@ -26,7 +27,8 @@
     "eslint": "^8.43.0",
     "ts-node": "^10.9.1",
     "tsconfig": "workspace:*",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "vitest": "^0.32.2"
   },
   "dependencies": {
     "open": "^9.1.0",
