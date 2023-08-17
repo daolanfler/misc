@@ -4,6 +4,7 @@
   "exclude": ["node_modules"],
   "compilerOptions": {
     "strictPropertyInitialization": false,
+    "moduleResolution": "Node16",
     "types": ["vitest/globals"]
   }
 }
