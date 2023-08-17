@@ -30,21 +30,19 @@ export type BinaryNode<T> = {
 
 function levelOrder(root: BinaryNode<number> | null): number[][] {
   if (!root) return [];
-  let currentLevel = [root];
+  let queue = [root];
   let result: number[][] = [];
 
-  while (currentLevel.length) {
+  while (queue.length) {
+    const size = queue.length;
     let vals: number[] = [];
-
-    const nextLevel: BinaryNode<number>[] = [];
-
-    currentLevel.forEach((item) => {
+    for (let i=0;i<size;++i) {
+      const item = queue.shift() as BinaryNode<number>;
       vals.push(item.value);
-      item.left && nextLevel.push(item.left);
-      item.right && nextLevel.push(item.right);
-    });
+      item.left && queue.push(item.left)
+      item.right && queue.push(item.right)
+    }
 
-    currentLevel = nextLevel;
     result.push(vals);
   }
   return result;
