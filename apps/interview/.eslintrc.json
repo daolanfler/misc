@@ -1,0 +1,56 @@
+{
+  "env": { "browser": true, "es6": true, "node": true },
+  "extends": ["eslint:recommended"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "ecmaFeatures": { "jsx": true },
+    "requireConfigFile": false
+  },
+  "rules": {
+    "no-unused-vars": 1,
+    "semi": "off",
+    "indent": ["error", 2],
+    "linebreak-style": ["error", "unix"]
+  },
+
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "env": { "browser": true, "es6": true, "node": true },
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaFeatures": { "jsx": true },
+        "ecmaVersion": 2018,
+        "sourceType": "module",
+        "project": ["./tsconfig.json"]
+      },
+      "plugins": ["@typescript-eslint"],
+      "settings": {
+        "react": {
+          "version": "detect"
+        }
+      },
+      "rules": {
+        "indent": "off",
+        "quotes": 0,
+        "prefer-const": 0,
+        "linebreak-style": ["error", "unix"],
+
+        // TypeScript Rules
+        "@typescript-eslint/indent": ["warn", 2, { "SwitchCase": 1 }],
+        "@typescript-eslint/no-explicit-any": 0,
+        "@typescript-eslint/no-unused-vars": 0,
+        "@typescript-eslint/ban-ts-comment": [
+          "error",
+          { "ts-expect-error": false }
+        ]
+      }
+    }
+  ]
+}

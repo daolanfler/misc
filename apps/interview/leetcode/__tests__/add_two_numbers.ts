@@ -28,7 +28,7 @@
 // 0 <= Node.val <= 9
 // 题目数据保证列表表示的数字不含前导零
 
-class ListNode<T> {
+export class ListNode<T> {
   val: T;
   next: ListNode<T> | null;
 
