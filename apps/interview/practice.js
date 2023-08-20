@@ -1,12 +1,12 @@
 const memorize = (initial, cb) => {
-  const resultFn = n => {
-    if (initial[n] === undefined) {
-      // not recorded 
-      initial[n] = cb(n, resultFn);
-    }
-    return initial[n];
-  };
-  return resultFn;
+    const resultFn = n => {
+        if (initial[n] === undefined) {
+            // not recorded 
+            initial[n] = cb(n, resultFn);
+        }
+        return initial[n];
+    };
+    return resultFn;
 };
 
 

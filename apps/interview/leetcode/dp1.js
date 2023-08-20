@@ -13,23 +13,23 @@
 // console.log(f(100000));
 
 function lis(arr) {
-  let i,
-    k,
-    p,
-    ans = 0,
-    cache = {};
-  for (i = 0; i < arr.length; i++) {
-    cache[i] = 1;
-  }
-  for (k = 0; k < arr.length; k++) {
-    for (p = 0; p < k; p++) {
-      if (arr[p] < arr[k]) cache[k] = Math.max(cache[k], cache[p] + 1);
+    let i,
+        k,
+        p,
+        ans = 0,
+        cache = {};
+    for (i = 0; i < arr.length; i++) {
+        cache[i] = 1;
     }
-  }
-  for (i = 0; i < arr.length; i++) {
-    ans = Math.max(ans, cache[i]);
-  }
-  return ans;
+    for (k = 0; k < arr.length; k++) {
+        for (p = 0; p < k; p++) {
+            if (arr[p] < arr[k]) cache[k] = Math.max(cache[k], cache[p] + 1);
+        }
+    }
+    for (i = 0; i < arr.length; i++) {
+        ans = Math.max(ans, cache[i]);
+    }
+    return ans;
 }
 
 console.log(lis([1, 5, 3, 4, 6, 9, 7, 8]));

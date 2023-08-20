@@ -1,10 +1,10 @@
 interface Speaker {
-  playSound(): void;
+    playSound(): void;
 }
 
 interface VolumeControl {
-  volumeUp(): void;
-  volumeDown(): void;
+    volumeUp(): void;
+    volumeDown(): void;
 }
 
 interface ISpeakerWithVolumeControl extends Speaker, VolumeControl {}
@@ -14,18 +14,18 @@ type ISpeakerWithVolumeControl2 = Speaker & VolumeControl;
 type ISpeakerWithVolumeControl3 = Speaker | VolumeControl;
 
 type test = ISpeakerWithVolumeControl extends ISpeakerWithVolumeControl2
-  ? true
-  : false;
+    ? true
+    : false;
 
 type test2 = ISpeakerWithVolumeControl3 extends ISpeakerWithVolumeControl2
-  ? true
-  : false;
+    ? true
+    : false;
 
 const device: ISpeakerWithVolumeControl3 = {
-  playSound() {
+    playSound() {
     //
-  },
-  volumeDown() {
+    },
+    volumeDown() {
     // 
-  },
+    },
 };

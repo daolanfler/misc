@@ -1,38 +1,38 @@
 // arrow function version
 
 function throttle1(
-  func,
-  wait,
-  options = {
-    leading: true,
-    trailing: true
-  }
+    func,
+    wait,
+    options = {
+        leading: true,
+        trailing: true
+    }
 ) {
-  let previous = 0;
-  let timer;
-  let result;
-  return function(...args) {
-    let now = Date.now();
-    if (!previous && options.leading === false) {
-      previous = now;
-    }
-    let remaining = wait - (now - previous);
-    if (remaining <= 0 || remaining > wait) {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      previous = now;
-      result = func.apply(this, args);
-    } else if (!timer && options.trailing !== false) {
-      timer = setTimeout(() => {
-        previous = options.leading === false ? 0 : Date.now();
-        timer = null;
-        result = func.apply(this, args);
-      }, remaining);
-    }
-    return result; // throttled return 如果有 timer & remaing > 0 返回上次 func 运行结果
-  };
+    let previous = 0;
+    let timer;
+    let result;
+    return function(...args) {
+        let now = Date.now();
+        if (!previous && options.leading === false) {
+            previous = now;
+        }
+        let remaining = wait - (now - previous);
+        if (remaining <= 0 || remaining > wait) {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+            previous = now;
+            result = func.apply(this, args);
+        } else if (!timer && options.trailing !== false) {
+            timer = setTimeout(() => {
+                previous = options.leading === false ? 0 : Date.now();
+                timer = null;
+                result = func.apply(this, args);
+            }, remaining);
+        }
+        return result; // throttled return 如果有 timer & remaing > 0 返回上次 func 运行结果
+    };
 }
 
 // Returns a function, that, when invoked, will only be triggered at most once
@@ -41,33 +41,33 @@ function throttle1(
 // but if you'd like to disable the execution on the leading edge, pass
 // `{leading: false}`. To disable execution on the trailing edge, ditto.
 function throttle(func, wait, options) {
-  var context, args, result;
-  var timeout = null;
-  var previous = 0;
-  if (!options) options = {};
-  var later = function() {
-    previous = options.leading === false ? 0 : Date.now();
-    timeout = null;
-    result = func.apply(context, args);
-    if (!timeout) context = args = null;
-  };
-  return function() {
-    var now = Date.now();
-    if (!previous && options.leading === false) previous = now;
-    var remaining = wait - (now - previous);
-    context = this;
-    args = arguments;
-    if (remaining <= 0 || remaining > wait) {
-      if (timeout) {
-        clearTimeout(timeout);
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    if (!options) options = {};
+    var later = function() {
+        previous = options.leading === false ? 0 : Date.now();
         timeout = null;
-      }
-      previous = now;
-      result = func.apply(context, args);
-      if (!timeout) context = args = null;
-    } else if (!timeout && options.trailing !== false) {
-      timeout = setTimeout(later, remaining);
-    }
-    return result;
-  };
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+    };
+    return function() {
+        var now = Date.now();
+        if (!previous && options.leading === false) previous = now;
+        var remaining = wait - (now - previous);
+        context = this;
+        args = arguments;
+        if (remaining <= 0 || remaining > wait) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+        } else if (!timeout && options.trailing !== false) {
+            timeout = setTimeout(later, remaining);
+        }
+        return result;
+    };
 }

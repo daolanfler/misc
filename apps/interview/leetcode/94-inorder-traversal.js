@@ -1,10 +1,9 @@
-/**
- * Definition for a binary tree node.
- * function TreeNode(val) {
- *     this.val = val;
- *     this.left = this.right = null;
- * }
- */
+//  Definition for a binary tree node.
+function TreeNode(val) {
+    this.val = val;
+    this.left = this.right = null;
+}
+
 /**
  * @param {TreeNode} root
  * @return {number[]}
@@ -28,23 +27,22 @@
 // }
 
 // in-order 是 left => root => right 的顺序
-const inorderTraversal = root => {
-  let result = [];
-  if (!root) return result;
-  let stack = [root];
-  let current = root.left;
+const inorderTraversal = (root) => {
+    let result = [];
+    if (!root) return result;
+    let stack = [root];
+    let current = root.left;
 
-  while (current || stack.length) {
-    while (current) {
-      stack.push(current);
-      current = current.left;
+    while (current || stack.length) {
+        while (current) {
+            stack.push(current);
+            current = current.left;
+        }
+        let lastLeft = stack.pop();
+        result.push(lastLeft.val);
+        current = lastLeft.right;
     }
-    let lastLeft = stack.pop();
-    result.push(lastLeft.val);
-    current = lastLeft.right;
-  }
-  return result;
+    return result;
 };
-
 
 // https://leetcode-cn.com/problems/binary-tree-inorder-traversal/

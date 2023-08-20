@@ -16,39 +16,39 @@
 
 // functor of function
 function map<T, U>(
-  f1: (arg1: T, arg2: T) => T,
-  f2: (arg: T) => U,
+    f1: (arg1: T, arg2: T) => T,
+    f2: (arg: T) => U,
 ): (arg1: T, arg2: T) => U {
-  return (arg1: T, arg2: T) => f2(f1(arg1, arg2));
+    return (arg1: T, arg2: T) => f2(f1(arg1, arg2));
 }
 
 function add(x: number, y: number) {
-  return x + y;
+    return x + y;
 }
 
 function strigify(n: number) {
-  return n.toString();
+    return n.toString();
 }
 
 const ss = map(add, strigify)(12, 44);
 console.log(ss);
 
 interface IReader<T> {
-  read(): T;
+    read(): T;
 }
 
 class MappedReader<T, U> implements IReader<U> {
-  value: IReader<T>;
-  func: (value: T) => U;
-  constructor(value: IReader<T>, func: (value: T) => U) {
-    this.value = value;
-    this.func = func;
-  }
-  read(): U {
-    return this.func(this.value.read());
-  }
+    value: IReader<T>;
+    func: (value: T) => U;
+    constructor(value: IReader<T>, func: (value: T) => U) {
+        this.value = value;
+        this.func = func;
+    }
+    read(): U {
+        return this.func(this.value.read());
+    }
 }
 
 function map2<T, U>(value: IReader<T>, func: (value: T) => U): IReader<U> {
-  return new MappedReader(value, func);
+    return new MappedReader(value, func);
 }

@@ -3,10 +3,10 @@
  * @param {number} k
  */
 var MyCircularQueue = function(k) {
-  this.data = Array(k);
-  this.front = 0;
-  this.rear = -1;
-  this.length = 0;
+    this.data = Array(k);
+    this.front = 0;
+    this.rear = -1;
+    this.length = 0;
 };
 
 /**
@@ -15,14 +15,14 @@ var MyCircularQueue = function(k) {
  * @return {boolean}
  */
 MyCircularQueue.prototype.enQueue = function(value) {
-  if (this.isFull()) {
-    return false;
-  } else {
-    this.rear = (this.rear + 1) % this.data.length;
-    this.data[this.rear] = value;
-    this.length++;
-    return true;
-  }
+    if (this.isFull()) {
+        return false;
+    } else {
+        this.rear = (this.rear + 1) % this.data.length;
+        this.data[this.rear] = value;
+        this.length++;
+        return true;
+    }
 };
 
 /**
@@ -30,13 +30,13 @@ MyCircularQueue.prototype.enQueue = function(value) {
  * @return {boolean}
  */
 MyCircularQueue.prototype.deQueue = function() {
-  if (this.isEmpty()) {
-    return false;
-  } else {
-    this.front = (this.front + 1) % this.data.length;
-    this.length--;
-    return true;
-  }
+    if (this.isEmpty()) {
+        return false;
+    } else {
+        this.front = (this.front + 1) % this.data.length;
+        this.length--;
+        return true;
+    }
 };
 
 /**
@@ -44,7 +44,7 @@ MyCircularQueue.prototype.deQueue = function() {
  * @return {number}
  */
 MyCircularQueue.prototype.Front = function() {
-  return this.isEmpty() ? -1 : this.data[this.front];
+    return this.isEmpty() ? -1 : this.data[this.front];
 };
 
 /**
@@ -52,7 +52,7 @@ MyCircularQueue.prototype.Front = function() {
  * @return {number}
  */
 MyCircularQueue.prototype.Rear = function() {
-  return this.isEmpty() ? -1 : this.data[this.rear];
+    return this.isEmpty() ? -1 : this.data[this.rear];
 };
 
 /**
@@ -60,7 +60,7 @@ MyCircularQueue.prototype.Rear = function() {
  * @return {boolean}
  */
 MyCircularQueue.prototype.isEmpty = function() {
-  return this.length === 0;
+    return this.length === 0;
 };
 
 /**
@@ -68,7 +68,7 @@ MyCircularQueue.prototype.isEmpty = function() {
  * @return {boolean}
  */
 MyCircularQueue.prototype.isFull = function() {
-  return this.length === this.data.length;
+    return this.length === this.data.length;
 };
 
 /**

@@ -1,13 +1,13 @@
 class Bike {
-  ride(): void {
+    ride(): void {
     //
-  }
+    }
 }
 
 class SportsCar {
-  drive(): void {
+    drive(): void {
     //
-  }
+    }
 }
 
 const myBike: Bike = new Bike();
@@ -21,37 +21,37 @@ myPretendSportsCar.drive();
 
 
 export class Either<TLeft, TRight> {
-  private readonly value: TLeft | TRight;
-  private readonly left: boolean;
+    private readonly value: TLeft | TRight;
+    private readonly left: boolean;
 
-  private constructor(value: TLeft | TRight, left: boolean) {
-    this.value= value;
-    this.left = left;
-  }
+    private constructor(value: TLeft | TRight, left: boolean) {
+        this.value= value;
+        this.left = left;
+    }
 
-  isLeft(): boolean {
-    return this.left;
-  }
+    isLeft(): boolean {
+        return this.left;
+    }
 
-  getLeft(): TLeft {
-    if (!this.isLeft()) throw new Error();
-    return this.value as TLeft;
-  }
+    getLeft(): TLeft {
+        if (!this.isLeft()) throw new Error();
+        return this.value as TLeft;
+    }
 
-  isRight():boolean {
-    return !this.left;
-  }
+    isRight():boolean {
+        return !this.left;
+    }
 
-  getRight(): TRight {
-    if(!this.isRight()) throw new Error();
-    return this.value as TRight;
-  }
+    getRight(): TRight {
+        if(!this.isRight()) throw new Error();
+        return this.value as TRight;
+    }
 
-  static makeLeft<TLeft, TRight>(value: TLeft) {
-    return new Either<TLeft, TRight>(value, true);
-  }
+    static makeLeft<TLeft, TRight>(value: TLeft) {
+        return new Either<TLeft, TRight>(value, true);
+    }
 
-  static makeRight<TLeft, TRight>(value: TRight) {
-    return new Either<TLeft, TRight>(value, false);
-  }
+    static makeRight<TLeft, TRight>(value: TRight) {
+        return new Either<TLeft, TRight>(value, false);
+    }
 }

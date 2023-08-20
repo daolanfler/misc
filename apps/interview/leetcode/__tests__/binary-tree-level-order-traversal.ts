@@ -23,31 +23,31 @@
 // -1000 <= Node.val <= 1000
 
 export type BinaryNode<T> = {
-  left: BinaryNode<T> | null;
-  right: BinaryNode<T> | null;
-  value: T;
+    left: BinaryNode<T> | null;
+    right: BinaryNode<T> | null;
+    value: T;
 };
 
 function levelOrder(root: BinaryNode<number> | null): number[][] {
-  if (!root) return [];
-  let queue = [root];
-  let result: number[][] = [];
+    if (!root) return [];
+    let queue = [root];
+    let result: number[][] = [];
 
-  while (queue.length) {
-    const size = queue.length;
-    let vals: number[] = [];
-    for (let i=0;i<size;++i) {
-      const item = queue.shift() as BinaryNode<number>;
-      vals.push(item.value);
-      item.left && queue.push(item.left)
-      item.right && queue.push(item.right)
+    while (queue.length) {
+        const size = queue.length;
+        let vals: number[] = [];
+        for (let i = 0; i < size; ++i) {
+            const item = queue.shift() as BinaryNode<number>;
+            vals.push(item.value);
+            item.left && queue.push(item.left);
+            item.right && queue.push(item.right);
+        }
+
+        result.push(vals);
     }
-
-    result.push(vals);
-  }
-  return result;
+    return result;
 }
 
 it('dummy', () => {
-  // 
+    //
 });

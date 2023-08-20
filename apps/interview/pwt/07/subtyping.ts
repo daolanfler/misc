@@ -1,23 +1,23 @@
 declare const TriangleType: unique symbol;
 
 class Triangle {
-  [TriangleType]: void;
+    [TriangleType]: void;
 }
 
 declare const SquareType: unique symbol;
 
 class Square {
-  [SquareType]: void;
+    [SquareType]: void;
 }
 
 declare const CircleType: unique symbol;
 class Circle {
-  [CircleType]: void;
+    [CircleType]: void;
 }
 
 declare const EqualateralTriangleType: unique symbol;
 class EqualateralTriangle extends Triangle {
-  [EqualateralTriangleType]: void;
+    [EqualateralTriangleType]: void;
 }
 
 declare function makeShape(): Triangle | Square;

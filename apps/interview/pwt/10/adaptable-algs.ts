@@ -1,65 +1,65 @@
 import { LinkedListNode } from "../09-Generics/Iterator";
 import {
-  ArrayIterator,
-  IBidirectionalIterator,
-  IForwardIterator,
-  LinkedListIterator,
+    ArrayIterator,
+    IBidirectionalIterator,
+    IForwardIterator,
+    LinkedListIterator,
 } from "./algs-with-generic-constraint";
 
 function nthLastForward<T>(
-  begin: IForwardIterator<T>,
-  end: IForwardIterator<T>,
-  n: number,
+    begin: IForwardIterator<T>,
+    end: IForwardIterator<T>,
+    n: number,
 ): IForwardIterator<T> {
-  if (n === 0) return end;
-  let len = 0;
-  const cloneBegin: IForwardIterator<T> = begin.clone();
-  while (!begin.equals(end)) {
-    len++;
-    begin.increment();
-  }
+    if (n === 0) return end;
+    let len = 0;
+    const cloneBegin: IForwardIterator<T> = begin.clone();
+    while (!begin.equals(end)) {
+        len++;
+        begin.increment();
+    }
 
-  if (n > len) return end;
-  let m = len - n;
-  // n might be negative, so cloneBegin should not equal with end
-  while (!cloneBegin.equals(end) && m-- > 0) {
-    cloneBegin.increment();
-  }
-  return cloneBegin;
+    if (n > len) return end;
+    let m = len - n;
+    // n might be negative, so cloneBegin should not equal with end
+    while (!cloneBegin.equals(end) && m-- > 0) {
+        cloneBegin.increment();
+    }
+    return cloneBegin;
 }
 
 function nthLastBidirectional<T>(
-  start: IBidirectionalIterator<T>,
-  end: IBidirectionalIterator<T>,
-  n: number,
+    start: IBidirectionalIterator<T>,
+    end: IBidirectionalIterator<T>,
+    n: number,
 ): IBidirectionalIterator<T> {
-  if (n === 0) return end;
-  const current = end.clone();
-  while (!start.equals(current) && n-- > 0) {
-    current.decrement();
-  }
-  if (n > 0) return end;
-  return current;
+    if (n === 0) return end;
+    const current = end.clone();
+    while (!start.equals(current) && n-- > 0) {
+        current.decrement();
+    }
+    if (n > 0) return end;
+    return current;
 }
 
 /** ts has no function overloading, thus needs to differenciate types and write 2
  * functions */
 function isBidirectional<T>(
-  instance: IForwardIterator<T>,
+    instance: IForwardIterator<T>,
 ): instance is IBidirectionalIterator<T> {
-  return "decrement" in instance;
+    return "decrement" in instance;
 }
 
 function nthLast<T>(
-  begin: IForwardIterator<T>,
-  end: IForwardIterator<T>,
-  n: number,
+    begin: IForwardIterator<T>,
+    end: IForwardIterator<T>,
+    n: number,
 ): IForwardIterator<T> {
-  if (isBidirectional(begin) && isBidirectional(end)) {
-    return nthLastBidirectional(begin, end, n);
-  } else {
-    return nthLastForward(begin, end, n);
-  }
+    if (isBidirectional(begin) && isBidirectional(end)) {
+        return nthLastBidirectional(begin, end, n);
+    } else {
+        return nthLastForward(begin, end, n);
+    }
 }
 
 // test for LinkedList with IForwardIterator

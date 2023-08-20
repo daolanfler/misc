@@ -15,10 +15,10 @@
 /* _____________ Your Code Here _____________ */
 
 type MyAwaited<T extends Promise<unknown>> = T extends Promise<infer E>
-  ? E extends Promise<unknown>
-    ? MyAwaited<E>
-    : E
-  : T;
+    ? E extends Promise<unknown>
+        ? MyAwaited<E>
+        : E
+    : T;
 
 /* _____________ Test Cases _____________ */
 import { Equal, Expect } from "@type-challenges/utils";
@@ -28,9 +28,9 @@ type Y = Promise<{ field: number }>;
 type Z = Promise<Promise<string | number>>;
 
 type cases = [
-  Expect<Equal<MyAwaited<X>, string>>,
-  Expect<Equal<MyAwaited<Y>, { field: number }>>,
-  Expect<Equal<MyAwaited<Z>, string | number>>
+    Expect<Equal<MyAwaited<X>, string>>,
+    Expect<Equal<MyAwaited<Y>, { field: number }>>,
+    Expect<Equal<MyAwaited<Z>, string | number>>
 ];
 
 // @ts-expect-error

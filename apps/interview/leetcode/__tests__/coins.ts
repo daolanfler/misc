@@ -11,7 +11,7 @@
 //         for coin in coins:
 //             if i >= coin:
 //                 dp[i] = min(dp[i], dp[i - coin] + 1)
-    
+
 //     return dp[n]
 
 // n = int(input("请输入要组成的金额："))
@@ -24,30 +24,29 @@
 
 // 使用动态规划，你可以更灵活地解决各种硬币找零问题，包括不同面值的硬币组合以及更复杂的情况。
 
-
 function dp(n: number) {
-  const coins = new Set([1, 4, 5, 11]);
-  const prev = new Array(n + 1).fill(Infinity);
-  prev[0] = 0;
+    const coins = new Set([1, 4, 5, 11]);
+    const prev = new Array(n + 1).fill(Infinity);
+    prev[0] = 0;
 
-  for (let i = 1; i <= n; ++i) {
-    for (const coin of coins) {
-      if (i >= coin) {
-        prev[i] = Math.min(prev[i], prev[i - coin] + 1);
-      }
+    for (let i = 1; i <= n; ++i) {
+        for (const coin of coins) {
+            if (i >= coin) {
+                prev[i] = Math.min(prev[i], prev[i - coin] + 1);
+            }
+        }
     }
-  }
-  return prev[n];
+    return prev[n];
 }
 
 it('12 should be 3: ', () => {
-  expect(dp(12)).toBe(2);
+    expect(dp(12)).toBe(2);
 });
 
 it('10 should be 2: ', () => {
-  expect(dp(10)).toBe(2);
+    expect(dp(10)).toBe(2);
 });
 
 it('11 should be 3: ', () => {
-  expect(dp(11)).toBe(1);
+    expect(dp(11)).toBe(1);
 });

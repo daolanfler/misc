@@ -11,19 +11,19 @@
  * @return {number[]}
  */
 var postorderTraversal = function (root) {
-  if (!root) return [];
+    if (!root) return [];
 
-  let result = [];
-  let stack = [root];
+    let result = [];
+    let stack = [root];
 
-  while (stack.length) {
-    const current = stack.pop();
-    result.unshift(current.val);
+    while (stack.length) {
+        const current = stack.pop();
+        result.unshift(current.val);
 
-    if (current.left) stack.push(current.left);
-    if (current.right) stack.push(current.right);
-  }
-  return result;
+        if (current.left) stack.push(current.left);
+        if (current.right) stack.push(current.right);
+    }
+    return result;
 };
 
 // https://leetcode-cn.com/problems/binary-tree-postorder-traversal/

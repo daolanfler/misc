@@ -29,67 +29,70 @@
 // 题目数据保证列表表示的数字不含前导零
 
 export class ListNode<T> {
-  val: T;
-  next: ListNode<T> | null;
+    val: T;
+    next: ListNode<T> | null;
 
-  constructor(val: T) {
-    this.val = val;
-    this.next = null;
-  }
+    constructor(val: T) {
+        this.val = val;
+        this.next = null;
+    }
 }
 
 function addTwoNumbers(
-  l1: ListNode<number> | null,
-  l2: ListNode<number> | null
+    l1: ListNode<number> | null,
+    l2: ListNode<number> | null
 ): ListNode<number> | null {
-  const head = new ListNode(0);
-  let carry = 0;
-  let curr = head;
+    const head = new ListNode(0);
+    let carry = 0;
+    let curr = head;
 
-  while (l1 || l2) {
-    const a = l1 ? l1.val : 0;
-    const b = l2 ? l2.val : 0;
-    const sum = a + b + carry;
-    carry = Math.floor(sum / 10);
-    curr.next = new ListNode(sum % 10);
-    curr = curr.next;
-    l1 = l1 && l1.next;
-    l2 = l2 && l2.next;
-  }
-  if (carry) {
-    curr.next = new ListNode(carry);
-  }
-  return head.next;
+    while (l1 || l2) {
+        const a = l1 ? l1.val : 0;
+        const b = l2 ? l2.val : 0;
+        const sum = a + b + carry;
+        carry = Math.floor(sum / 10);
+        curr.next = new ListNode(sum % 10);
+        curr = curr.next;
+        l1 = l1 && l1.next;
+        l2 = l2 && l2.next;
+    }
+    if (carry) {
+        curr.next = new ListNode(carry);
+    }
+    return head.next;
 }
 
 function buildListNode(nums: number[]): ListNode<number> | null {
-  if (!nums.length) return null;
-  const head = new ListNode(nums[0]);
-  let prev = head;
-  for (let i = 1; i < nums.length; i++) {
-    prev.next = new ListNode(nums[i]);
-    prev = prev.next;
-  }
-  return head;
+    if (!nums.length) return null;
+    const head = new ListNode(nums[0]);
+    let prev = head;
+    for (let i = 1; i < nums.length; i++) {
+        prev.next = new ListNode(nums[i]);
+        prev = prev.next;
+    }
+    return head;
 }
 
 it('case 1: ', () => {
-  const res = addTwoNumbers(buildListNode([2, 4, 3]), buildListNode([5, 6, 4]));
+    const res = addTwoNumbers(
+        buildListNode([2, 4, 3]),
+        buildListNode([5, 6, 4])
+    );
 
-  expect(res).toEqual(buildListNode([7, 0, 8]));
+    expect(res).toEqual(buildListNode([7, 0, 8]));
 });
 
 it('case 2: ', () => {
-  const res = addTwoNumbers(buildListNode([0]), buildListNode([0]));
+    const res = addTwoNumbers(buildListNode([0]), buildListNode([0]));
 
-  expect(res).toEqual(buildListNode([0]));
+    expect(res).toEqual(buildListNode([0]));
 });
 
 it('case 2: ', () => {
-  const res = addTwoNumbers(
-    buildListNode([9, 9, 9, 9, 9, 9, 9]),
-    buildListNode([9, 9, 9, 9])
-  );
+    const res = addTwoNumbers(
+        buildListNode([9, 9, 9, 9, 9, 9, 9]),
+        buildListNode([9, 9, 9, 9])
+    );
 
-  expect(res).toEqual(buildListNode([8, 9, 9, 9, 0, 0, 0, 1]));
+    expect(res).toEqual(buildListNode([8, 9, 9, 9, 0, 0, 0, 1]));
 });
